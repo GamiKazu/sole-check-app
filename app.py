@@ -18,7 +18,7 @@ if "step" not in st.session_state:
 st.markdown("""
 <style>
     .block-container {
-        max-width: 700px;
+        max-width: 720px;
         padding-top: 2rem;
         padding-bottom: 3rem;
     }
@@ -34,6 +34,13 @@ st.markdown("""
         text-align: center;
         color: #777;
         margin-bottom: 2rem;
+    }
+
+    .result-card {
+        padding: 18px 20px;
+        border-radius: 12px;
+        background-color: #f5f5f5;
+        margin-bottom: 18px;
     }
 
     div.stButton > button {
@@ -63,7 +70,7 @@ st.markdown(
 
 # =========================================================
 # STEP 1
-# 簡単な質問
+# 質問
 # =========================================================
 if st.session_state.step == 1:
 
@@ -87,6 +94,12 @@ if st.session_state.step == 1:
         horizontal=True
     )
 
+    standing = st.radio(
+        "普段、立っている時間は長いですか？",
+        ["はい", "いいえ"],
+        horizontal=True
+    )
+
     shoes = st.selectbox(
         "普段よく履く靴は？",
         [
@@ -97,12 +110,6 @@ if st.session_state.step == 1:
             "ブーツ",
             "その他"
         ]
-    )
-
-    standing = st.radio(
-        "普段、立っている時間は長いですか？",
-        ["はい", "いいえ"],
-        horizontal=True
     )
 
     foot_concern = st.selectbox(
@@ -137,8 +144,8 @@ if st.session_state.step == 1:
         st.session_state.cold = cold
         st.session_state.swelling = swelling
         st.session_state.tired = tired
-        st.session_state.shoes = shoes
         st.session_state.standing = standing
+        st.session_state.shoes = shoes
         st.session_state.foot_concern = foot_concern
         st.session_state.aroma_goal = aroma_goal
 
@@ -171,7 +178,7 @@ elif st.session_state.step == 2:
     st.write("")
 
     st.write(
-        "両足の写真だけでは細かい部分が分かりにくい場合は、"
+        "細かい部分が分かりにくい場合は、"
         "右足・左足のアップ写真も追加できます。"
     )
 
@@ -187,27 +194,24 @@ elif st.session_state.step == 2:
         key="left_foot"
     )
 
-    # -----------------------------
-    # プレビュー
-    # -----------------------------
     if both_feet:
         st.image(
             both_feet,
-            caption="両足の写真",
+            caption="両足",
             use_container_width=True
         )
 
     if right_foot:
         st.image(
             right_foot,
-            caption="右足の写真",
+            caption="右足",
             use_container_width=True
         )
 
     if left_foot:
         st.image(
             left_foot,
-            caption="左足の写真",
+            caption="左足",
             use_container_width=True
         )
 
@@ -226,126 +230,268 @@ elif st.session_state.step == 2:
             type="primary",
             disabled=not both_feet
         ):
+
+            # -------------------------------------------------
+            # 今は仮の画像診断値
+            # 後でAI画像解析の結果に置き換える
+            # -------------------------------------------------
+            st.session_state.toe_type = "ギリシャ型"
+            st.session_state.foot_color = "赤み強め"
+            st.session_state.arch = "標準"
+            st.session_state.callus = "前足部"
+            st.session_state.dryness = "やや乾燥"
+            st.session_state.left_right_diff = "小さい"
+
             st.session_state.step = 3
             st.rerun()
 
 
 # =========================================================
 # STEP 3
-# 仮の診断結果
+# 診断結果
 # =========================================================
 elif st.session_state.step == 3:
+
+    toe_type = st.session_state.toe_type
+    foot_color = st.session_state.foot_color
+    arch = st.session_state.arch
+    callus = st.session_state.callus
+    dryness = st.session_state.dryness
+    left_right_diff = st.session_state.left_right_diff
+
+    cold = st.session_state.cold
+    swelling = st.session_state.swelling
+    tired = st.session_state.tired
+    standing = st.session_state.standing
+    shoes = st.session_state.shoes
+    foot_concern = st.session_state.foot_concern
+    aroma_goal = st.session_state.aroma_goal
 
     st.subheader("診断結果")
 
     st.caption(
-        "現在は画面確認用の仮診断です。"
-        "今後、足裏写真の画像分析を組み込みます。"
+        "現在は画像判定部分のみ仮データです。"
+        "今後、足裏写真から自動判定するように変更します。"
     )
 
     st.divider()
 
-    # -----------------------------
-    # 足裏タイプ
-    # -----------------------------
-    st.markdown("### 足裏タイプ")
+    # =====================================================
+    # 1. 足指タイプ
+    # =====================================================
+    if toe_type == "エジプト型":
+        toe_text = (
+            "親指が最も長く、小指に向かって順番に短くなるタイプです。"
+            "リフレクソロジー的な性格傾向では、"
+            "安定感や現実性を重視するタイプとして紹介されることがあります。"
+        )
 
-    st.info("バランス型")
+    elif toe_type == "ギリシャ型":
+        toe_text = (
+            "第2趾が親指より長いタイプです。"
+            "リフレクソロジー的な性格傾向では、"
+            "行動力や感性が強いタイプとして紹介されることがあります。"
+        )
 
-    st.write(
-        "全体的にバランスが取りやすいタイプとして表示しています。"
+    else:
+        toe_text = (
+            "親指から中指付近までの長さが比較的そろっているタイプです。"
+            "リフレクソロジー的な性格傾向では、"
+            "バランスや慎重さを大切にするタイプとして紹介されることがあります。"
+        )
+
+    st.markdown("### 1. 足指タイプ")
+    st.markdown(
+        f"""
+        <div class="result-card">
+            <strong>{toe_type}</strong><br><br>
+            {toe_text}
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.divider()
+    # =====================================================
+    # 2. 足裏カラー
+    # =====================================================
+    if foot_color == "赤み強め":
+        color_text = (
+            "写真上では足裏に赤みがやや強く見られます。"
+            "リフレクソロジー的には、活動量や緊張感が高い時、"
+            "疲れがたまっている時の傾向として捉えることがあります。"
+        )
 
-    # -----------------------------
-    # 歩き方
-    # -----------------------------
-    st.markdown("### 歩き方の傾向")
+    elif foot_color == "黄み強め":
+        color_text = (
+            "写真上では黄みがやや強く見られます。"
+            "リフレクソロジー的には、疲れの蓄積や"
+            "気分転換を求めている時の傾向として捉えることがあります。"
+        )
 
-    st.write(
-        "現在は仮結果です。"
-        "今後は足裏写真や質問内容から歩き方の傾向を表示します。"
+    elif foot_color == "白っぽい":
+        color_text = (
+            "写真上では足裏がやや白っぽく見られます。"
+            "リフレクソロジー的には、休息を求めている時や"
+            "活力を温存したい時の傾向として捉えることがあります。"
+        )
+
+    else:
+        color_text = (
+            "写真上では、大きな色味の偏りは目立ちません。"
+        )
+
+    st.markdown("### 2. 足裏カラー")
+    st.markdown(
+        f"""
+        <div class="result-card">
+            <strong>{foot_color}</strong><br><br>
+            {color_text}
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.divider()
+    # =====================================================
+    # 3. 現在の心身傾向
+    # =====================================================
+    rest_score = 0
 
-    # -----------------------------
-    # 靴
-    # -----------------------------
-    st.markdown("### おすすめの靴")
+    if foot_color == "赤み強め":
+        rest_score += 2
 
-    if st.session_state.tired == "はい":
-        st.write(
-            "クッション性と安定感があり、"
-            "足への負担を軽減しやすい靴がおすすめです。"
+    if foot_color == "白っぽい":
+        rest_score += 1
+
+    if cold == "はい":
+        rest_score += 2
+
+    if swelling == "はい":
+        rest_score += 1
+
+    if tired == "はい":
+        rest_score += 2
+
+    if aroma_goal == "睡眠":
+        rest_score += 1
+
+    if rest_score >= 6:
+        mind_body = (
+            "現在は心身ともに休息を意識したい傾向です。"
+            "無理に活動量を増やすより、ゆっくり休む時間を確保するのがおすすめです。"
+        )
+    elif rest_score >= 3:
+        mind_body = (
+            "少し疲れがたまりやすい傾向が見られます。"
+            "短時間でも休息や気分転換を取り入れるのがおすすめです。"
         )
     else:
-        st.write(
-            "足幅や足の形に合い、"
-            "つま先に適度なゆとりがある靴がおすすめです。"
+        mind_body = (
+            "質問回答上では、大きな疲労傾向は目立ちません。"
+            "現在の状態を維持しつつ、定期的なセルフケアがおすすめです。"
         )
 
-    st.divider()
-
-    # -----------------------------
-    # 足裏コンディション
-    # -----------------------------
-    st.markdown("### 足裏コンディション")
-
-    if st.session_state.cold == "はい":
-        st.write(
-            "冷えを感じやすい傾向があるようです。"
-        )
-
-    if st.session_state.swelling == "はい":
-        st.write(
-            "むくみを感じやすい傾向があるようです。"
-        )
-
-    if (
-        st.session_state.cold == "いいえ"
-        and st.session_state.swelling == "いいえ"
-    ):
-        st.write(
-            "現時点の質問回答では、"
-            "冷えやむくみの自覚は少ないようです。"
-        )
-
-    st.divider()
-
-    # -----------------------------
-    # 性格傾向
-    # -----------------------------
-    st.markdown("### 性格傾向")
-
-    st.write(
-        "今後、リフレクソロジーをベースにした"
-        "エンタメ要素として表示します。"
+    st.markdown("### 3. 現在の心身傾向")
+    st.markdown(
+        f"""
+        <div class="result-card">
+            {mind_body}
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.divider()
+    # =====================================================
+    # 4. 歩き方の傾向
+    # =====================================================
+    if callus == "前足部":
+        walk_text = (
+            "前足部に負担がかかりやすい傾向として考えられます。"
+            "長時間歩いた時に足の前側が疲れやすい場合は、"
+            "歩幅や靴のクッション性を見直すのもおすすめです。"
+        )
 
-    # -----------------------------
-    # アロマ
-    # -----------------------------
-    st.markdown("### おすすめのアロマ")
+    elif callus == "かかと":
+        walk_text = (
+            "かかと側への負担がやや強い傾向として考えられます。"
+            "着地時の衝撃を和らげるクッション性のある靴がおすすめです。"
+        )
 
-    goal = st.session_state.aroma_goal
+    elif callus == "親指側":
+        walk_text = (
+            "足の内側に負担がかかりやすい傾向として考えられます。"
+        )
 
-    if goal == "リラックス":
+    elif callus == "小指側":
+        walk_text = (
+            "足の外側に負担がかかりやすい傾向として考えられます。"
+        )
+
+    else:
+        walk_text = (
+            "足裏全体に大きな偏りは目立たない傾向です。"
+        )
+
+    st.markdown("### 4. 歩き方の傾向")
+    st.markdown(
+        f"""
+        <div class="result-card">
+            {walk_text}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # =====================================================
+    # 5. おすすめの靴
+    # =====================================================
+    shoe_recommendations = []
+
+    if tired == "はい":
+        shoe_recommendations.append("クッション性が高い")
+
+    if standing == "はい":
+        shoe_recommendations.append("安定感がある")
+
+    if arch == "低め":
+        shoe_recommendations.append("適度なアーチサポートがある")
+
+    if callus == "前足部":
+        shoe_recommendations.append("つま先・前足部にゆとりがある")
+
+    if callus == "小指側":
+        shoe_recommendations.append("足幅に余裕がある")
+
+    if not shoe_recommendations:
+        shoe_recommendations.append("足幅と足長に合ったフィット感のある")
+
+    shoe_text = "、".join(shoe_recommendations) + "靴がおすすめです。"
+
+    st.markdown("### 5. おすすめの靴")
+    st.markdown(
+        f"""
+        <div class="result-card">
+            {shoe_text}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # =====================================================
+    # 6. おすすめアロマ
+    # =====================================================
+    if aroma_goal == "リラックス":
         aroma = "ラベンダー"
-        aroma_text = "ゆったり過ごしたい時間におすすめです。"
+        aroma_text = "ゆったりと過ごしたい時間におすすめです。"
 
-    elif goal == "リフレッシュ":
+    elif aroma_goal == "リフレッシュ":
         aroma = "レモン"
         aroma_text = "気持ちを切り替えたい時におすすめです。"
 
-    elif goal == "集中":
+    elif aroma_goal == "集中":
         aroma = "ローズマリー"
         aroma_text = "集中したい時間におすすめです。"
 
-    elif goal == "睡眠":
+    elif aroma_goal == "睡眠":
         aroma = "ラベンダー"
         aroma_text = "就寝前など落ち着きたい時間におすすめです。"
 
@@ -353,14 +499,58 @@ elif st.session_state.step == 3:
         aroma = "スイートオレンジ"
         aroma_text = "気分転換したい時におすすめです。"
 
-    st.success(aroma)
+    st.markdown("### 6. おすすめアロマ")
+    st.markdown(
+        f"""
+        <div class="result-card">
+            <strong>{aroma}</strong><br><br>
+            {aroma_text}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    st.write(aroma_text)
+    # =====================================================
+    # 7. セルフケア
+    # =====================================================
+    care_list = []
+
+    if cold == "はい":
+        care_list.append("足元を温める")
+
+    if swelling == "はい":
+        care_list.append("軽いストレッチや足首運動")
+
+    if tired == "はい":
+        care_list.append("足を休ませる時間をつくる")
+
+    if dryness == "やや乾燥":
+        care_list.append("入浴後の保湿")
+
+    if callus != "なし":
+        care_list.append("角質部分に過度な負担をかけない")
+
+    if not care_list:
+        care_list.append("定期的な保湿と足裏ストレッチ")
+
+    care_text = "・".join(care_list)
+
+    st.markdown("### 7. セルフケア")
+    st.markdown(
+        f"""
+        <div class="result-card">
+            {care_text}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     st.divider()
 
     st.caption(
         "この診断は医療行為・医学的診断を目的としたものではありません。"
+        "足裏カラーや性格傾向は、リフレクソロジー上の考え方をもとにした"
+        "ウェルネス・エンタメ要素を含みます。"
     )
 
     st.write("")
