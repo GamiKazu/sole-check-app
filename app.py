@@ -17,9 +17,22 @@ if "step" not in st.session_state:
 # -----------------------------
 st.markdown("""
 <style>
+    .stApp {
+        background-color: white;
+        color: black;
+    }
+
+    [data-testid="stAppViewContainer"] {
+        background-color: white;
+    }
+
+    [data-testid="stHeader"] {
+        background-color: white;
+    }
+
     .block-container {
         max-width: 720px;
-        padding-top: 2rem;
+        padding-top: 3.8rem;
         padding-bottom: 3rem;
     }
 
@@ -27,13 +40,18 @@ st.markdown("""
         text-align: center;
         font-size: 2.2rem;
         font-weight: 800;
-        margin-bottom: 0.5rem;
+        line-height: 1.45;
+        margin-top: 0.8rem;
+        margin-bottom: 0.6rem;
+        padding-top: 0.4rem;
+        color: #222;
     }
 
     .sub-title {
         text-align: center;
         color: #777;
         margin-bottom: 2rem;
+        line-height: 1.6;
     }
 
     .result-card {
@@ -41,6 +59,7 @@ st.markdown("""
         border-radius: 12px;
         background-color: #f5f5f5;
         margin-bottom: 18px;
+        color: #222;
     }
 
     div.stButton > button {
