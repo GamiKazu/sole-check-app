@@ -1,103 +1,133 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="顔タイプ診断",
+    page_title="足裏タイプ診断",
     layout="centered"
 )
 
-st.markdown("""
-<style>
-    .block-container {
-        max-width: 650px;
-        padding-top: 2rem;
-    }
+# セッション状態
+if "step" not in st.session_state:
+    st.session_state.step = 1
 
-    .main-title {
-        text-align: center;
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 0.4rem;
-    }
+st.title("足裏タイプ診断")
+st.write("簡単な質問と足裏写真から、あなたの足の傾向をチェックします。")
 
-    .sub-title {
-        text-align: center;
-        color: #777;
-        margin-bottom: 2rem;
-    }
+# STEP 1：質問
+if st.session_state.step == 1:
 
-    .result-box {
-        padding: 20px;
-        border-radius: 12px;
-        background-color: #f5f5f5;
-        margin-top: 20px;
-    }
+    st.subheader("STEP 1　簡単な質問")
 
-    div.stButton > button {
-        width: 100%;
-        height: 52px;
-        font-size: 18px;
-        font-weight: bold;
-        border-radius: 10px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown(
-    '<div class="main-title">顔タイプ診断</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="sub-title">写真からあなたの印象タイプを診断します</div>',
-    unsafe_allow_html=True
-)
-
-photo = st.file_uploader(
-    "顔写真をアップロード",
-    type=["jpg", "jpeg", "png"]
-)
-
-if photo:
-    st.image(
-        photo,
-        caption="選択した写真",
-        use_container_width=True
+    cold = st.radio(
+        "足が冷えやすいですか？",
+        ["はい", "いいえ"]
     )
 
-    if st.button("診断する", type="primary"):
-        with st.spinner("診断中です..."):
+    swelling = st.radio(
+        "むくみを感じることがありますか？",
+        ["はい", "いいえ"]
+    )
 
-            # 仮の診断結果
-            result_type = "ムードメーカータイプ"
-            social = 82
-            calm = 64
-            curiosity = 91
+    tired = st.radio(
+        "長時間歩くと足が疲れやすいですか？",
+        ["はい", "いいえ"]
+    )
 
-        st.markdown("## 診断結果")
+    shoes = st.selectbox(
+        "普段よく履く靴は？",
+        ["スニーカー", "革靴", "パンプス", "サンダル", "その他"]
+    )
 
-        st.markdown(
-            f"""
-            <div class="result-box">
-                <h2>{result_type}</h2>
-                <p>
-                    明るく親しみやすい印象を与えやすく、
-                    周囲を自然に盛り上げるタイプです。
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    work = st.radio(
+        "立っている時間が長いですか？",
+        ["はい", "いいえ"]
+    )
 
-        st.write("### 印象スコア")
+    aroma_goal = st.selectbox(
+        "今、一番求めているものは？",
+        ["リラックス", "リフレッシュ", "集中", "睡眠"]
+    )
 
-        st.write(f"社交性　{social}%")
-        st.progress(social)
+    if st.button("次へ", type="primary"):
+        st.session_state.cold = cold
+        st.session_state.swelling = swelling
+        st.session_state.tired = tired
+        st.session_state.shoes = shoes
+        st.session_state.work = work
+        st.session_state.aroma_goal = aroma_goal
 
-        st.write(f"落ち着き　{calm}%")
-        st.progress(calm)
+        st.session_state.step = 2
+        st.rerun()
 
-        st.write(f"好奇心　{curiosity}%")
-        st.progress(curiosity)
 
-else:
-    st.info("顔写真を選択してください")
+# STEP 2：足裏写真
+elif st.session_state.step == 2:
+
+    st.subheader("STEP 2　足裏写真")
+
+    st.write("右足と左足の足裏写真をアップロードしてください。")
+
+    right_foot = st.file_uploader(
+        "右足",
+        type=["jpg", "jpeg", "png"],
+        key="right"
+    )
+
+    left_foot = st.file_uploader(
+        "左足",
+        type=["jpg", "jpeg", "png"],
+        key="left"
+    )
+
+    if right_foot:
+        st.image(right_foot, caption="右足")
+
+    if left_foot:
+        st.image(left_foot, caption="左足")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("戻る"):
+            st.session_state.step = 1
+            st.rerun()
+
+    with col2:
+        if st.button(
+            "診断する",
+            type="primary",
+            disabled=not (right_foot and left_foot)
+        ):
+            st.session_state.step = 3
+            st.rerun()
+
+
+# STEP 3：仮診断結果
+elif st.session_state.step == 3:
+
+    st.subheader("診断結果")
+
+    st.write("足裏タイプ")
+    st.info("バランス型")
+
+    st.write("歩き方の傾向")
+    st.write("現在は仮結果です。今後、足裏画像の分析結果を反映します。")
+
+    st.write("おすすめの靴")
+    st.write("クッション性と安定感のある靴がおすすめです。")
+
+    st.write("おすすめのアロマ")
+
+    if st.session_state.aroma_goal == "リラックス":
+        aroma = "ラベンダー"
+    elif st.session_state.aroma_goal == "リフレッシュ":
+        aroma = "レモン"
+    elif st.session_state.aroma_goal == "集中":
+        aroma = "ローズマリー"
+    else:
+        aroma = "ラベンダー"
+
+    st.success(aroma)
+
+    if st.button("最初から診断する"):
+        st.session_state.step = 1
+        st.rerun()
