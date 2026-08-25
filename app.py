@@ -1,12 +1,15 @@
 import streamlit as st
 
-st.title("足裏診断")
+st.title("顔タイプ診断")
 
-st.write("足裏写真を撮影して診断します")
+st.write("顔写真をアップロードして診断します")
 
-photo = st.camera_input("足裏を撮影してください")
+photo = st.file_uploader(
+    "顔写真を選んでください",
+    type=["jpg", "jpeg", "png"]
+)
 
 if photo:
     st.image(photo)
-    st.success("撮影できました！")
+    st.success("画像を読み込みました！")
     st.write("ここに診断結果を表示します。")
