@@ -1,16 +1,9 @@
-import io
-
 import cv2
 import numpy as np
 import streamlit as st
-import torch
 from PIL import Image
-from transformers import pipeline
 
 
-# =========================================================
-# ページ設定
-# =========================================================
 st.set_page_config(
     page_title="足裏タイプ診断",
     layout="centered"
@@ -61,14 +54,6 @@ st.markdown("""
     line-height: 1.7;
 }
 
-.analysis-card {
-    padding: 14px 16px;
-    border-radius: 10px;
-    background-color: #f8f8f8;
-    color: #222222;
-    margin-bottom: 10px;
-}
-
 div.stButton > button {
     width: 100%;
     min-height: 50px;
@@ -99,264 +84,971 @@ div.stButton > button {
 
 
 # =========================================================
-# 無料AIモデル
-# 初回のみダウンロード
+# 基本画像処理
 # =========================================================
-@st.cache_resource(show_spinner=False)
-def load_classifier():
+def pil_to_rgb(image):
+    return np.array(image.convert("RGB"))
 
-    device = 0 if torch.cuda.is_available() else -1
 
-    classifier = pipeline(
-        task="zero-shot-image-classification",
-        model="openai/clip-vit-base-patch32",
-        device=device
+def largest_contour(mask):
+
+    contours, _ = cv2.findContours(
+        mask,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
     )
 
-    return classifier
+    if not contours:
+        return None
 
-
-# =========================================================
-# 画像読み込み
-# =========================================================
-def load_image(uploaded_file):
-
-    uploaded_file.seek(0)
-
-    image = Image.open(uploaded_file).convert("RGB")
-
-    return image
-
-
-# =========================================================
-# CLIP分類
-# =========================================================
-def classify_image(image, labels):
-
-    classifier = load_classifier()
-
-    results = classifier(
-        image,
-        candidate_labels=labels
+    return max(
+        contours,
+        key=cv2.contourArea
     )
 
-    if not results:
-        return None, 0.0
-
-    best = results[0]
-
-    return best["label"], float(best["score"])
-
 
 # =========================================================
-# 足指タイプ
+# 足の領域抽出
 # =========================================================
-def analyze_toe_type(image):
+def segment_foot(rgb):
 
-    labels = [
-        "Egyptian foot shape, big toe is the longest and toes gradually get shorter",
-        "Greek foot shape, second toe is longer than the big toe",
-        "square Roman foot shape, first three toes are similar in length",
-        "unclear toe shape"
-    ]
+    h, w = rgb.shape[:2]
 
-    label, confidence = classify_image(
-        image,
-        labels
+    if h < 80 or w < 50:
+        return None
+
+    bgr = cv2.cvtColor(
+        rgb,
+        cv2.COLOR_RGB2BGR
     )
 
-    mapping = {
-        labels[0]: "エジプト型",
-        labels[1]: "ギリシャ型",
-        labels[2]: "スクエア型",
-        labels[3]: "判定困難"
-    }
-
-    return mapping.get(label, "判定困難"), confidence
-
-
-# =========================================================
-# 乾燥
-# =========================================================
-def analyze_dryness(image):
-
-    labels = [
-        "smooth moisturized sole skin",
-        "slightly dry sole skin",
-        "very dry cracked sole skin"
-    ]
-
-    label, confidence = classify_image(
-        image,
-        labels
+    mask = np.zeros(
+        (h, w),
+        np.uint8
     )
 
-    mapping = {
-        labels[0]: "乾燥は目立たない",
-        labels[1]: "やや乾燥",
-        labels[2]: "乾燥が目立つ"
-    }
-
-    return mapping.get(
-        label,
-        "判定困難"
-    ), confidence
-
-
-# =========================================================
-# 角質
-# =========================================================
-def analyze_callus(image):
-
-    labels = [
-        "no visible callus on the sole",
-        "callus mainly on the heel",
-        "callus mainly on the ball of the foot",
-        "callus mainly near the big toe",
-        "callus mainly near the little toe"
-    ]
-
-    label, confidence = classify_image(
-        image,
-        labels
+    margin_x = max(
+        2,
+        int(w * 0.06)
     )
 
-    mapping = {
-        labels[0]: "なし",
-        labels[1]: "かかと",
-        labels[2]: "前足部",
-        labels[3]: "親指側",
-        labels[4]: "小指側"
-    }
+    margin_y = max(
+        2,
+        int(h * 0.04)
+    )
 
-    return mapping.get(
-        label,
-        "判定困難"
-    ), confidence
+    rect = (
+        margin_x,
+        margin_y,
+        max(
+            2,
+            w - margin_x * 2
+        ),
+        max(
+            2,
+            h - margin_y * 2
+        )
+    )
+
+    bgd = np.zeros(
+        (1, 65),
+        np.float64
+    )
+
+    fgd = np.zeros(
+        (1, 65),
+        np.float64
+    )
+
+    try:
+
+        cv2.grabCut(
+            bgr,
+            mask,
+            rect,
+            bgd,
+            fgd,
+            4,
+            cv2.GC_INIT_WITH_RECT
+        )
+
+        binary = np.where(
+            (mask == cv2.GC_FGD)
+            |
+            (mask == cv2.GC_PR_FGD),
+            255,
+            0
+        ).astype("uint8")
+
+    except cv2.error:
+
+        gray = cv2.cvtColor(
+            bgr,
+            cv2.COLOR_BGR2GRAY
+        )
+
+        _, binary = cv2.threshold(
+            gray,
+            0,
+            255,
+            cv2.THRESH_BINARY
+            +
+            cv2.THRESH_OTSU
+        )
+
+
+    kernel = np.ones(
+        (7, 7),
+        np.uint8
+    )
+
+    binary = cv2.morphologyEx(
+        binary,
+        cv2.MORPH_CLOSE,
+        kernel,
+        iterations=2
+    )
+
+    binary = cv2.morphologyEx(
+        binary,
+        cv2.MORPH_OPEN,
+        kernel,
+        iterations=1
+    )
+
+
+    contour = largest_contour(
+        binary
+    )
+
+    if contour is None:
+        return None
+
+
+    area_ratio = (
+        cv2.contourArea(contour)
+        /
+        float(h * w)
+    )
+
+    if area_ratio < 0.08:
+        return None
+
+
+    clean = np.zeros_like(
+        binary
+    )
+
+    cv2.drawContours(
+        clean,
+        [contour],
+        -1,
+        255,
+        thickness=-1
+    )
+
+    return clean
 
 
 # =========================================================
-# 足裏カラー解析
-# OpenCVで写真上の色味を見る
+# マスク部分だけ切り抜く
 # =========================================================
-def analyze_foot_color(image):
+def crop_to_mask(
+    rgb,
+    mask
+):
 
-    rgb = np.array(image)
-
-    height, width, _ = rgb.shape
-
-    # 背景の影響を少し減らすため
-    # 中央80%を使用
-    y1 = int(height * 0.10)
-    y2 = int(height * 0.90)
-
-    x1 = int(width * 0.10)
-    x2 = int(width * 0.90)
-
-    crop = rgb[y1:y2, x1:x2]
-
-    # 極端に暗い / 明るい背景を多少除外
-    gray = cv2.cvtColor(
-        crop,
-        cv2.COLOR_RGB2GRAY
+    ys, xs = np.where(
+        mask > 0
     )
 
-    mask = (
-        (gray > 45)
-        & (gray < 245)
+    if len(xs) == 0:
+        return rgb, mask
+
+
+    x1 = xs.min()
+    x2 = xs.max()
+
+    y1 = ys.min()
+    y2 = ys.max()
+
+
+    return (
+        rgb[
+            y1:y2 + 1,
+            x1:x2 + 1
+        ],
+        mask[
+            y1:y2 + 1,
+            x1:x2 + 1
+        ]
     )
 
-    pixels = crop[mask]
 
-    if len(pixels) < 100:
+# =========================================================
+# 足指が上側になるように向きを補正
+# =========================================================
+def ensure_toes_top(
+    rgb,
+    mask
+):
 
-        pixels = crop.reshape(-1, 3)
+    h, w = mask.shape
 
-    mean_rgb = pixels.mean(axis=0)
+    band = max(
+        5,
+        int(h * 0.22)
+    )
 
-    red = float(mean_rgb[0])
-    green = float(mean_rgb[1])
-    blue = float(mean_rgb[2])
+    top_width = (
+        np.count_nonzero(
+            mask[:band] > 0
+        )
+        /
+        band
+    )
 
-    brightness = (
-        red + green + blue
-    ) / 3
+    bottom_width = (
+        np.count_nonzero(
+            mask[-band:] > 0
+        )
+        /
+        band
+    )
 
-    # -----------------------------
-    # 簡易カラー分類
-    # -----------------------------
-    if (
-        red > green * 1.10
-        and red > blue * 1.15
+
+    if bottom_width > (
+        top_width * 1.10
     ):
 
-        color = "赤み強め"
+        return (
+            np.rot90(
+                rgb,
+                2
+            ),
+            np.rot90(
+                mask,
+                2
+            )
+        )
 
-    elif (
-        red > blue * 1.18
-        and green > blue * 1.10
-        and abs(red - green) < 50
-    ):
 
-        color = "黄み強め"
+    return rgb, mask
 
-    elif (
-        brightness > 195
-        and abs(red - green) < 30
-        and abs(green - blue) < 30
-    ):
 
-        color = "白っぽい"
+# =========================================================
+# 足の形判定
+# =========================================================
+def classify_foot_shape(
+    rgb,
+    big_toe_side
+):
+
+    mask = segment_foot(
+        rgb
+    )
+
+    if mask is None:
+
+        return (
+            "判定困難",
+            0.0
+        )
+
+
+    rgb, mask = crop_to_mask(
+        rgb,
+        mask
+    )
+
+    rgb, mask = ensure_toes_top(
+        rgb,
+        mask
+    )
+
+
+    h, w = mask.shape
+
+    if h < 60 or w < 40:
+
+        return (
+            "判定困難",
+            0.0
+        )
+
+
+    toe_band_h = max(
+        20,
+        int(h * 0.38)
+    )
+
+    toe_mask = mask[
+        :toe_band_h
+    ]
+
+
+    zone_edges = np.linspace(
+        0,
+        w,
+        6
+    ).astype(int)
+
+
+    tips = []
+
+
+    for i in range(5):
+
+        x1 = zone_edges[i]
+        x2 = zone_edges[i + 1]
+
+        zone = toe_mask[
+            :,
+            x1:x2
+        ]
+
+        ys, xs = np.where(
+            zone > 0
+        )
+
+        if len(ys) < max(
+            10,
+            (x2 - x1) * 2
+        ):
+
+            tips.append(
+                None
+            )
+
+        else:
+
+            tips.append(
+                float(
+                    np.percentile(
+                        ys,
+                        5
+                    )
+                )
+            )
+
+
+    # 左足は親指が中央側＝右
+    if big_toe_side == "right":
+
+        big_idx = 4
+        second_idx = 3
+        third_idx = 2
 
     else:
 
-        color = "標準的な色味"
+        big_idx = 0
+        second_idx = 1
+        third_idx = 2
 
-    rgb_info = {
-        "R": round(red, 1),
-        "G": round(green, 1),
-        "B": round(blue, 1)
+
+    needed = [
+        tips[big_idx],
+        tips[second_idx],
+        tips[third_idx]
+    ]
+
+
+    if any(
+        value is None
+        for value in needed
+    ):
+
+        return (
+            "判定困難",
+            0.0
+        )
+
+
+    big_y = needed[0]
+    second_y = needed[1]
+    third_y = needed[2]
+
+
+    norm = max(
+        1.0,
+        float(toe_band_h)
+    )
+
+
+    # yが小さいほど
+    # 上にある＝長い指
+    d12 = (
+        second_y - big_y
+    ) / norm
+
+    d23 = (
+        third_y - second_y
+    ) / norm
+
+
+    # 第2趾が親指より長い
+    if d12 < -0.035:
+
+        result = "ギリシャ型"
+
+        confidence = min(
+            0.95,
+            0.60
+            +
+            abs(d12) * 4.0
+        )
+
+
+    # 1～3趾の高さが近い
+    elif (
+        abs(d12) <= 0.03
+        and
+        abs(d23) <= 0.045
+    ):
+
+        result = "スクエア型"
+
+        confidence = 0.70
+
+
+    # 親指が第2趾より長い
+    elif d12 > 0.025:
+
+        result = "エジプト型"
+
+        confidence = min(
+            0.95,
+            0.60
+            +
+            d12 * 4.0
+        )
+
+
+    else:
+
+        result = "判定困難"
+
+        confidence = 0.45
+
+
+    return (
+        result,
+        confidence
+    )
+
+
+# =========================================================
+# HSV + Labで足裏カラー判定
+# =========================================================
+def color_analysis(rgb):
+
+    mask = segment_foot(
+        rgb
+    )
+
+    if mask is None:
+
+        return (
+            "判定困難",
+            {}
+        )
+
+
+    hsv = cv2.cvtColor(
+        rgb,
+        cv2.COLOR_RGB2HSV
+    )
+
+    lab = cv2.cvtColor(
+        rgb,
+        cv2.COLOR_RGB2LAB
+    )
+
+
+    valid = mask > 0
+
+
+    # 影と白飛びを除外
+    brightness = hsv[:, :, 2]
+
+    valid &= (
+        brightness > 45
+    )
+
+    valid &= (
+        brightness < 248
+    )
+
+
+    if valid.sum() < 200:
+
+        valid = mask > 0
+
+
+    H = float(
+        np.median(
+            hsv[:, :, 0][valid]
+        )
+    )
+
+    S = float(
+        np.median(
+            hsv[:, :, 1][valid]
+        )
+    )
+
+    V = float(
+        np.median(
+            hsv[:, :, 2][valid]
+        )
+    )
+
+    L = float(
+        np.median(
+            lab[:, :, 0][valid]
+        )
+    )
+
+    A = float(
+        np.median(
+            lab[:, :, 1][valid]
+        )
+    )
+
+    B = float(
+        np.median(
+            lab[:, :, 2][valid]
+        )
+    )
+
+
+    # -----------------------------
+    # 白
+    # -----------------------------
+    if (
+        S < 35
+        and
+        V > 185
+    ):
+
+        result = "白っぽい"
+
+
+    # -----------------------------
+    # 赤
+    # -----------------------------
+    elif (
+        (
+            H <= 5
+            or
+            H >= 176
+        )
+        and
+        S >= 55
+        and
+        A >= 135
+    ):
+
+        result = "赤み強め"
+
+
+    # -----------------------------
+    # オレンジ
+    # -----------------------------
+    elif (
+        H > 5
+        and
+        H <= 17
+        and
+        S >= 45
+    ):
+
+        result = "オレンジ寄り"
+
+
+    # -----------------------------
+    # 黄色
+    # -----------------------------
+    elif (
+        H > 17
+        and
+        H <= 32
+        and
+        S >= 45
+        and
+        B >= 135
+    ):
+
+        result = "黄み強め"
+
+
+    # -----------------------------
+    # 標準
+    # -----------------------------
+    else:
+
+        result = "標準的な色味"
+
+
+    info = {
+
+        "H": round(H, 1),
+        "S": round(S, 1),
+        "V": round(V, 1),
+
+        "L": round(L, 1),
+        "a": round(A, 1),
+        "b": round(B, 1)
+
     }
 
-    return color, rgb_info
+
+    return (
+        result,
+        info
+    )
 
 
 # =========================================================
-# 画像1枚を総合解析
+# 乾燥・角質
 # =========================================================
-def analyze_foot_image(image):
+def texture_and_callus(rgb):
 
-    toe_type, toe_confidence = (
-        analyze_toe_type(image)
+    mask = segment_foot(
+        rgb
     )
 
-    dryness, dryness_confidence = (
-        analyze_dryness(image)
+    if mask is None:
+
+        return (
+            "判定困難",
+            "判定困難"
+        )
+
+
+    gray = cv2.cvtColor(
+        rgb,
+        cv2.COLOR_RGB2GRAY
     )
 
-    callus, callus_confidence = (
-        analyze_callus(image)
+
+    lap = cv2.Laplacian(
+        gray,
+        cv2.CV_64F
     )
 
-    foot_color, rgb_info = (
-        analyze_foot_color(image)
+
+    texture = np.abs(
+        lap
+    )[mask > 0]
+
+
+    if texture.size:
+
+        texture_score = float(
+            np.percentile(
+                texture,
+                75
+            )
+        )
+
+    else:
+
+        texture_score = 0
+
+
+    if texture_score > 28:
+
+        dryness = (
+            "乾燥が目立つ"
+        )
+
+    elif texture_score > 18:
+
+        dryness = (
+            "やや乾燥"
+        )
+
+    else:
+
+        dryness = (
+            "乾燥は目立たない"
+        )
+
+
+    lab = cv2.cvtColor(
+        rgb,
+        cv2.COLOR_RGB2LAB
     )
+
+
+    light = lab[:, :, 0]
+    yellow = lab[:, :, 2]
+
+
+    candidates = (
+        (mask > 0)
+        &
+        (light > 145)
+        &
+        (yellow > 138)
+    )
+
+
+    ys, xs = np.where(
+        candidates
+    )
+
+
+    if len(xs) < 100:
+
+        callus = "なし"
+
+
+    else:
+
+        all_y, all_x = np.where(
+            mask > 0
+        )
+
+
+        x1 = all_x.min()
+        x2 = all_x.max()
+
+        y1 = all_y.min()
+        y2 = all_y.max()
+
+
+        cx = float(
+            xs.mean()
+        )
+
+        cy = float(
+            ys.mean()
+        )
+
+
+        nx = (
+            cx - x1
+        ) / max(
+            1,
+            x2 - x1
+        )
+
+        ny = (
+            cy - y1
+        ) / max(
+            1,
+            y2 - y1
+        )
+
+
+        if ny > 0.72:
+
+            callus = "かかと"
+
+
+        elif ny < 0.45:
+
+            callus = "前足部"
+
+
+        elif nx < 0.35:
+
+            callus = "左側"
+
+
+        elif nx > 0.65:
+
+            callus = "右側"
+
+
+        else:
+
+            callus = "中央"
+
+
+    return (
+        dryness,
+        callus
+    )
+
+
+# =========================================================
+# 両足画像を左右に分ける
+# =========================================================
+def split_both_feet(image):
+
+    rgb = pil_to_rgb(
+        image
+    )
+
+    h, w = rgb.shape[:2]
+
+
+    middle = w // 2
+
+
+    overlap = int(
+        w * 0.03
+    )
+
+
+    left = rgb[
+        :,
+        :min(
+            w,
+            middle + overlap
+        )
+    ]
+
+
+    right = rgb[
+        :,
+        max(
+            0,
+            middle - overlap
+        ):
+    ]
+
+
+    return (
+        left,
+        right
+    )
+
+
+# =========================================================
+# 両足を総合解析
+# =========================================================
+def analyze_both_feet(image):
+
+    left_rgb, right_rgb = (
+        split_both_feet(
+            image
+        )
+    )
+
+
+    left_shape, left_conf = (
+        classify_foot_shape(
+            left_rgb,
+            big_toe_side="right"
+        )
+    )
+
+
+    right_shape, right_conf = (
+        classify_foot_shape(
+            right_rgb,
+            big_toe_side="left"
+        )
+    )
+
+
+    full_rgb = pil_to_rgb(
+        image
+    )
+
+
+    color, color_info = (
+        color_analysis(
+            full_rgb
+        )
+    )
+
+
+    dryness, callus = (
+        texture_and_callus(
+            full_rgb
+        )
+    )
+
+
+    valid_shapes = [
+        shape
+        for shape in [
+            left_shape,
+            right_shape
+        ]
+        if shape != "判定困難"
+    ]
+
+
+    if (
+        len(valid_shapes) == 2
+        and
+        valid_shapes[0]
+        ==
+        valid_shapes[1]
+    ):
+
+        overall_shape = (
+            valid_shapes[0]
+        )
+
+
+    elif len(valid_shapes) == 2:
+
+        overall_shape = (
+            "左右で異なる"
+        )
+
+
+    elif len(valid_shapes) == 1:
+
+        overall_shape = (
+            valid_shapes[0]
+        )
+
+
+    else:
+
+        overall_shape = (
+            "判定困難"
+        )
+
 
     return {
 
-        "toe_type": toe_type,
-        "toe_confidence": toe_confidence,
+        "overall_shape": overall_shape,
+
+        "left_shape": left_shape,
+        "right_shape": right_shape,
+
+        "left_shape_conf": left_conf,
+        "right_shape_conf": right_conf,
+
+        "foot_color": color,
+        "color_info": color_info,
 
         "dryness": dryness,
-        "dryness_confidence": dryness_confidence,
 
-        "callus": callus,
-        "callus_confidence": callus_confidence,
+        "callus": callus
 
-        "foot_color": foot_color,
-
-        "rgb": rgb_info
     }
+
+
+# =========================================================
+# 結果カード
+# =========================================================
+def result_card(
+    title,
+    body
+):
+
+    st.markdown(
+        f"### {title}"
+    )
+
+    st.markdown(
+        f"""
+        <div class="result-card">
+        {body}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 # =========================================================
@@ -380,13 +1072,13 @@ st.markdown(
 
 # =========================================================
 # STEP 1
-# 質問
 # =========================================================
 if st.session_state.step == 1:
 
     st.subheader(
         "STEP 1　簡単な質問"
     )
+
 
     cold = st.radio(
         "足が冷えやすいですか？",
@@ -397,6 +1089,7 @@ if st.session_state.step == 1:
         horizontal=True
     )
 
+
     swelling = st.radio(
         "むくみを感じることがありますか？",
         [
@@ -405,6 +1098,7 @@ if st.session_state.step == 1:
         ],
         horizontal=True
     )
+
 
     tired = st.radio(
         "長時間歩いたり立っていると、"
@@ -416,6 +1110,7 @@ if st.session_state.step == 1:
         horizontal=True
     )
 
+
     standing = st.radio(
         "普段、立っている時間は長いですか？",
         [
@@ -424,6 +1119,7 @@ if st.session_state.step == 1:
         ],
         horizontal=True
     )
+
 
     shoes = st.selectbox(
         "普段よく履く靴は？",
@@ -436,6 +1132,7 @@ if st.session_state.step == 1:
             "その他"
         ]
     )
+
 
     foot_concern = st.selectbox(
         "足で一番気になることは？",
@@ -451,6 +1148,7 @@ if st.session_state.step == 1:
         ]
     )
 
+
     aroma_goal = st.selectbox(
         "今、一番求めているものは？",
         [
@@ -462,7 +1160,6 @@ if st.session_state.step == 1:
         ]
     )
 
-    st.write("")
 
     if st.button(
         "次へ",
@@ -474,6 +1171,7 @@ if st.session_state.step == 1:
         st.session_state.tired = tired
         st.session_state.standing = standing
         st.session_state.shoes = shoes
+
         st.session_state.foot_concern = (
             foot_concern
         )
@@ -489,7 +1187,6 @@ if st.session_state.step == 1:
 
 # =========================================================
 # STEP 2
-# 写真
 # =========================================================
 elif st.session_state.step == 2:
 
@@ -497,10 +1194,12 @@ elif st.session_state.step == 2:
         "STEP 2　足裏写真"
     )
 
+
     st.write(
-        "まず、両足の足裏が確認できる"
-        "写真をアップロードしてください。"
+        "両足の足裏が確認できる写真を"
+        "アップロードしてください。"
     )
+
 
     both_feet = st.file_uploader(
         "両足の写真（必須）",
@@ -512,22 +1211,17 @@ elif st.session_state.step == 2:
         key="both_feet"
     )
 
+
     st.caption(
-        "足指からかかとまで、"
-        "両足全体が正面から写るようにしてください。"
-        "自然光または明るい白色照明で、"
-        "画像加工なしの写真がおすすめです。"
+        "両足を並べ、足指からかかとまで"
+        "正面から写してください。"
+        "背景と足の色ができるだけ"
+        "区別しやすい写真がおすすめです。"
     )
 
-    st.write("")
-
-    st.write(
-        "細部が分かりにくい場合は、"
-        "右足・左足のアップ写真も追加できます。"
-    )
 
     right_foot = st.file_uploader(
-        "右足の写真（任意）",
+        "右足のアップ写真（任意）",
         type=[
             "jpg",
             "jpeg",
@@ -536,8 +1230,9 @@ elif st.session_state.step == 2:
         key="right_foot"
     )
 
+
     left_foot = st.file_uploader(
-        "左足の写真（任意）",
+        "左足のアップ写真（任意）",
         type=[
             "jpg",
             "jpeg",
@@ -545,6 +1240,7 @@ elif st.session_state.step == 2:
         ],
         key="left_foot"
     )
+
 
     if both_feet:
 
@@ -554,33 +1250,22 @@ elif st.session_state.step == 2:
             use_container_width=True
         )
 
-    if right_foot:
 
-        st.image(
-            right_foot,
-            caption="右足",
-            use_container_width=True
-        )
+    col1, col2 = st.columns(
+        2
+    )
 
-    if left_foot:
-
-        st.image(
-            left_foot,
-            caption="左足",
-            use_container_width=True
-        )
-
-    st.write("")
-
-    col1, col2 = st.columns(2)
 
     with col1:
 
-        if st.button("戻る"):
+        if st.button(
+            "戻る"
+        ):
 
             st.session_state.step = 1
 
             st.rerun()
+
 
     with col2:
 
@@ -590,69 +1275,166 @@ elif st.session_state.step == 2:
             disabled=not both_feet
         )
 
+
     if diagnose:
 
         with st.spinner(
-            "足裏写真を解析しています。"
-            "初回はAIモデルの読み込みに"
-            "少し時間がかかります。"
+            "足裏写真を解析しています..."
         ):
 
-            both_image = load_image(
+            image = Image.open(
                 both_feet
+            ).convert(
+                "RGB"
             )
 
-            both_analysis = (
-                analyze_foot_image(
-                    both_image
+
+            analysis = (
+                analyze_both_feet(
+                    image
                 )
             )
 
-            st.session_state.both_analysis = (
-                both_analysis
-            )
 
-            # ---------------------------------
-            # 右足追加画像
-            # ---------------------------------
+            # -----------------------------
+            # 右足補助写真
+            # -----------------------------
             if right_foot:
 
-                right_image = load_image(
-                    right_foot
-                )
-
-                st.session_state.right_analysis = (
-                    analyze_foot_image(
-                        right_image
+                right_image = pil_to_rgb(
+                    Image.open(
+                        right_foot
+                    ).convert(
+                        "RGB"
                     )
                 )
 
-            else:
 
-                st.session_state.right_analysis = (
-                    None
+                rshape, rconf = (
+                    classify_foot_shape(
+                        right_image,
+                        big_toe_side="left"
+                    )
                 )
 
-            # ---------------------------------
-            # 左足追加画像
-            # ---------------------------------
+
+                if rshape != "判定困難":
+
+                    analysis[
+                        "right_shape"
+                    ] = rshape
+
+                    analysis[
+                        "right_shape_conf"
+                    ] = rconf
+
+
+            # -----------------------------
+            # 左足補助写真
+            # -----------------------------
             if left_foot:
 
-                left_image = load_image(
-                    left_foot
-                )
-
-                st.session_state.left_analysis = (
-                    analyze_foot_image(
-                        left_image
+                left_image = pil_to_rgb(
+                    Image.open(
+                        left_foot
+                    ).convert(
+                        "RGB"
                     )
                 )
 
+
+                lshape, lconf = (
+                    classify_foot_shape(
+                        left_image,
+                        big_toe_side="right"
+                    )
+                )
+
+
+                if lshape != "判定困難":
+
+                    analysis[
+                        "left_shape"
+                    ] = lshape
+
+                    analysis[
+                        "left_shape_conf"
+                    ] = lconf
+
+
+            left_shape = (
+                analysis[
+                    "left_shape"
+                ]
+            )
+
+            right_shape = (
+                analysis[
+                    "right_shape"
+                ]
+            )
+
+
+            if (
+                left_shape
+                !=
+                "判定困難"
+                and
+                right_shape
+                !=
+                "判定困難"
+            ):
+
+                if (
+                    left_shape
+                    ==
+                    right_shape
+                ):
+
+                    analysis[
+                        "overall_shape"
+                    ] = left_shape
+
+                else:
+
+                    analysis[
+                        "overall_shape"
+                    ] = "左右で異なる"
+
+
+            elif (
+                left_shape
+                !=
+                "判定困難"
+            ):
+
+                analysis[
+                    "overall_shape"
+                ] = left_shape
+
+
+            elif (
+                right_shape
+                !=
+                "判定困難"
+            ):
+
+                analysis[
+                    "overall_shape"
+                ] = right_shape
+
+
             else:
 
-                st.session_state.left_analysis = (
-                    None
-                )
+                analysis[
+                    "overall_shape"
+                ] = "判定困難"
+
+
+            st.session_state.analysis = (
+                analysis
+            )
+
 
         st.session_state.step = 3
 
@@ -661,172 +1443,113 @@ elif st.session_state.step == 2:
 
 # =========================================================
 # STEP 3
-# 診断結果
 # =========================================================
 elif st.session_state.step == 3:
 
     analysis = (
-        st.session_state.both_analysis
+        st.session_state.analysis
     )
 
-    toe_type = analysis["toe_type"]
-    foot_color = analysis["foot_color"]
-    callus = analysis["callus"]
-    dryness = analysis["dryness"]
 
-    cold = st.session_state.cold
-    swelling = st.session_state.swelling
-    tired = st.session_state.tired
-    standing = st.session_state.standing
+    cold = (
+        st.session_state.cold
+    )
+
+    swelling = (
+        st.session_state.swelling
+    )
+
+    tired = (
+        st.session_state.tired
+    )
+
+    standing = (
+        st.session_state.standing
+    )
+
     aroma_goal = (
         st.session_state.aroma_goal
     )
+
 
     st.subheader(
         "診断結果"
     )
 
-    st.caption(
-        "画像AIと写真上の色解析、"
-        "質問回答を組み合わせた結果です。"
+
+    # =====================================================
+    # 1 足の形
+    # =====================================================
+    shape_body = (
+        f"<strong>{analysis['overall_shape']}</strong>"
+        "<br><br>"
+        f"左足：{analysis['left_shape']}"
+        f"（判定度 "
+        f"{analysis['left_shape_conf'] * 100:.0f}%）"
+        "<br>"
+        f"右足：{analysis['right_shape']}"
+        f"（判定度 "
+        f"{analysis['right_shape_conf'] * 100:.0f}%）"
+    )
+
+
+    result_card(
+        "1. 足の形",
+        shape_body
     )
 
 
     # =====================================================
-    # AI画像解析結果
+    # 2 足裏カラー
     # =====================================================
-    st.markdown(
-        "### 画像解析"
-    )
-
-    st.markdown(
-        f"""
-        <div class="analysis-card">
-
-        <strong>足指タイプ</strong><br>
-        {toe_type}
-        （AI信頼度：
-        {analysis["toe_confidence"] * 100:.0f}%）
-
-        <br><br>
-
-        <strong>足裏カラー</strong><br>
-        {foot_color}
-
-        <br><br>
-
-        <strong>乾燥傾向</strong><br>
-        {dryness}
-        （AI信頼度：
-        {analysis["dryness_confidence"] * 100:.0f}%）
-
-        <br><br>
-
-        <strong>角質が目立つ位置</strong><br>
-        {callus}
-        （AI信頼度：
-        {analysis["callus_confidence"] * 100:.0f}%）
-
-        </div>
-        """,
-        unsafe_allow_html=True
+    color = (
+        analysis[
+            "foot_color"
+        ]
     )
 
 
-    # =====================================================
-    # 1. 足指タイプ
-    # =====================================================
-    if toe_type == "エジプト型":
-
-        toe_text = (
-            "親指が最も長く、"
-            "小指に向かって徐々に短くなる"
-            "特徴が見られます。"
-            "リフレクソロジー的な解釈では、"
-            "安定感や現実性を重視する"
-            "タイプとして紹介されることがあります。"
-        )
-
-    elif toe_type == "ギリシャ型":
-
-        toe_text = (
-            "第2趾が親指より長い特徴が"
-            "見られます。"
-            "リフレクソロジー的な解釈では、"
-            "行動力や感性が強いタイプとして"
-            "紹介されることがあります。"
-        )
-
-    elif toe_type == "スクエア型":
-
-        toe_text = (
-            "親指から中指付近の長さが"
-            "比較的近い特徴が見られます。"
-            "リフレクソロジー的な解釈では、"
-            "慎重さやバランスを重視する"
-            "タイプとして紹介されることがあります。"
-        )
-
-    else:
-
-        toe_text = (
-            "今回の写真では足指タイプを"
-            "明確に分類できませんでした。"
-            "足指が正面から見える写真を"
-            "追加すると判定しやすくなります。"
-        )
-
-    st.markdown(
-        "### 1. 足指タイプ"
-    )
-
-    st.markdown(
-        f"""
-        <div class="result-card">
-        <strong>{toe_type}</strong>
-        <br><br>
-        {toe_text}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-    # =====================================================
-    # 2. 足裏カラー
-    # =====================================================
-    if foot_color == "赤み強め":
+    if color == "赤み強め":
 
         color_text = (
-            "写真上では足裏に赤みが"
-            "比較的強く見られます。"
+            "写真上では赤みが強く見られます。"
             "リフレクソロジー上では、"
-            "活動量が多い時や、緊張感・疲れを"
-            "感じている時の傾向として"
+            "活動量や緊張感が高まっている時の"
+            "傾向として捉える考え方があります。"
+        )
+
+
+    elif color == "オレンジ寄り":
+
+        color_text = (
+            "写真上ではオレンジ寄りの"
+            "色味が見られます。"
+            "リフレクソロジー上では、"
+            "活動性と疲労感の両方が"
+            "表れやすい状態として"
             "捉える考え方があります。"
         )
 
-    elif foot_color == "黄み強め":
+
+    elif color == "黄み強め":
 
         color_text = (
-            "写真上では黄みが比較的"
-            "強く見られます。"
+            "写真上では黄みが強く見られます。"
             "リフレクソロジー上では、"
-            "疲れがたまった時や、"
-            "気分転換を求める状態として"
-            "捉える考え方があります。"
+            "疲れや気分転換を求めている時の"
+            "傾向として捉える考え方があります。"
         )
 
-    elif foot_color == "白っぽい":
+
+    elif color == "白っぽい":
 
         color_text = (
-            "写真上では全体的に"
-            "白っぽく見られます。"
+            "写真上では白っぽく見られます。"
             "リフレクソロジー上では、"
-            "休息を求めている時や"
-            "活力を温存したい時の傾向として"
-            "捉える考え方があります。"
+            "休息を必要としている時の"
+            "傾向として捉える考え方があります。"
         )
+
 
     else:
 
@@ -835,32 +1558,32 @@ elif st.session_state.step == 3:
             "目立ちません。"
         )
 
-    st.markdown(
-        "### 2. 足裏カラー"
-    )
 
-    st.markdown(
-        f"""
-        <div class="result-card">
-        <strong>{foot_color}</strong>
-        <br><br>
-        {color_text}
-        </div>
-        """,
-        unsafe_allow_html=True
+    result_card(
+        "2. 足裏カラー",
+        (
+            f"<strong>{color}</strong>"
+            "<br><br>"
+            f"{color_text}"
+        )
     )
 
 
     # =====================================================
-    # 3. 心身傾向
+    # 3 心身傾向
     # =====================================================
     rest_score = 0
 
-    if foot_color == "赤み強め":
+
+    if color == "赤み強め":
         rest_score += 2
 
-    if foot_color == "白っぽい":
+    elif color == "オレンジ寄り":
         rest_score += 1
+
+    elif color == "白っぽい":
+        rest_score += 1
+
 
     if cold == "はい":
         rest_score += 2
@@ -878,107 +1601,104 @@ elif st.session_state.step == 3:
     if rest_score >= 6:
 
         mind_body = (
-            "現在は休息を意識したい傾向です。"
-            "質問回答でも疲れや冷えなどが"
-            "重なっているため、"
-            "無理をせずリラックスする時間を"
-            "確保するのがおすすめです。"
+            "質問回答と足裏の見た目を合わせると、"
+            "今は休息を意識したい傾向として"
+            "捉えられます。"
         )
+
 
     elif rest_score >= 3:
 
         mind_body = (
             "少し疲れがたまりやすい"
-            "傾向が見られます。"
+            "傾向として捉えられます。"
             "短時間でも休息や気分転換を"
             "取り入れるのがおすすめです。"
         )
+
 
     else:
 
         mind_body = (
             "質問回答上では大きな疲労傾向は"
             "目立ちません。"
-            "現在の状態を保ちながら、"
-            "定期的なセルフケアを"
-            "取り入れるのがおすすめです。"
+            "現在の状態を保ちながら"
+            "定期的なセルフケアがおすすめです。"
         )
 
-    st.markdown(
-        "### 3. 現在の心身傾向"
-    )
 
-    st.markdown(
-        f"""
-        <div class="result-card">
-        {mind_body}
-        </div>
-        """,
-        unsafe_allow_html=True
+    result_card(
+        "3. 現在の心身傾向",
+        mind_body
     )
 
 
     # =====================================================
-    # 4. 歩き方
+    # 4 歩き方
     # =====================================================
+    callus = (
+        analysis[
+            "callus"
+        ]
+    )
+
+
     if callus == "前足部":
 
         walk_text = (
             "前足部に負担が集中している"
             "可能性があります。"
-            "長く歩いた時に足の前側が"
-            "疲れやすくないか確認してみてください。"
         )
+
 
     elif callus == "かかと":
 
         walk_text = (
             "かかと側への負担が"
             "比較的大きい可能性があります。"
-            "着地時の衝撃を受けやすい傾向として"
-            "参考にしてください。"
         )
 
-    elif callus == "親指側":
+
+    elif callus in [
+        "左側",
+        "右側"
+    ]:
 
         walk_text = (
-            "足の内側・親指側へ"
-            "負担がかかりやすい可能性があります。"
+            f"足裏の{callus}に"
+            "角質傾向が見られます。"
+            "荷重の偏りを考える際の"
+            "参考になります。"
         )
 
-    elif callus == "小指側":
+
+    elif callus == "なし":
 
         walk_text = (
-            "足の外側・小指側へ"
-            "負担がかかりやすい可能性があります。"
+            "角質位置から見た大きな"
+            "負担の偏りは明確ではありません。"
         )
+
 
     else:
 
         walk_text = (
-            "写真上では角質位置から見た"
-            "大きな負担の偏りは"
-            "明確ではありません。"
+            "今回の写真では負担位置を"
+            "明確に判定できませんでした。"
         )
 
-    st.markdown(
-        "### 4. 歩き方の傾向"
-    )
 
-    st.markdown(
-        f"""
-        <div class="result-card">
-        {walk_text}
-        </div>
-        """,
-        unsafe_allow_html=True
+    result_card(
+        "4. 歩き方の傾向",
+        walk_text
     )
 
 
     # =====================================================
-    # 5. 靴
+    # 5 靴
     # =====================================================
     shoe_list = []
+
 
     if tired == "はい":
 
@@ -986,11 +1706,13 @@ elif st.session_state.step == 3:
             "クッション性が高い"
         )
 
+
     if standing == "はい":
 
         shoe_list.append(
             "安定感がある"
         )
+
 
     if callus == "前足部":
 
@@ -998,262 +1720,172 @@ elif st.session_state.step == 3:
             "前足部にゆとりがある"
         )
 
-    if callus == "小指側":
+
+    if callus in [
+        "左側",
+        "右側"
+    ]:
 
         shoe_list.append(
-            "足幅に余裕がある"
+            "足幅に無理のない"
         )
+
 
     if not shoe_list:
 
         shoe_list.append(
             "足幅と足長に合った"
-            "フィット感のある"
         )
+
 
     shoe_text = (
-        "、".join(shoe_list)
-        + "靴がおすすめです。"
+        "、".join(
+            shoe_list
+        )
+        +
+        "靴がおすすめです。"
     )
 
-    st.markdown(
-        "### 5. おすすめの靴"
-    )
 
-    st.markdown(
-        f"""
-        <div class="result-card">
-        {shoe_text}
-        </div>
-        """,
-        unsafe_allow_html=True
+    result_card(
+        "5. おすすめの靴",
+        shoe_text
     )
 
 
     # =====================================================
-    # 6. アロマ
+    # 6 アロマ
     # =====================================================
-    if aroma_goal == "リラックス":
+    aroma_map = {
 
-        aroma = "ラベンダー"
-
-        aroma_text = (
+        "リラックス": (
+            "ラベンダー",
             "落ち着いて過ごしたい時間に"
             "取り入れやすい香りです。"
-        )
+        ),
 
-    elif aroma_goal == "リフレッシュ":
-
-        aroma = "レモン"
-
-        aroma_text = (
+        "リフレッシュ": (
+            "レモン",
             "気持ちを切り替えたい時に"
             "取り入れやすい香りです。"
-        )
+        ),
 
-    elif aroma_goal == "集中":
-
-        aroma = "ローズマリー"
-
-        aroma_text = (
+        "集中": (
+            "ローズマリー",
             "集中したい時間に"
             "取り入れやすい香りです。"
-        )
+        ),
 
-    elif aroma_goal == "睡眠":
+        "睡眠": (
+            "ラベンダー",
+            "就寝前など落ち着きたい時間に"
+            "おすすめです。"
+        ),
 
-        aroma = "ラベンダー"
-
-        aroma_text = (
-            "就寝前など、"
-            "落ち着きたい時間におすすめです。"
-        )
-
-    else:
-
-        aroma = "スイートオレンジ"
-
-        aroma_text = (
+        "気分転換": (
+            "スイートオレンジ",
             "気分転換したい時に"
             "取り入れやすい香りです。"
         )
+    }
 
-    st.markdown(
-        "### 6. おすすめアロマ"
+
+    aroma, aroma_text = (
+        aroma_map[
+            aroma_goal
+        ]
     )
 
-    st.markdown(
-        f"""
-        <div class="result-card">
-        <strong>{aroma}</strong>
-        <br><br>
-        {aroma_text}
-        </div>
-        """,
-        unsafe_allow_html=True
+
+    result_card(
+        "6. おすすめアロマ",
+        (
+            f"<strong>{aroma}</strong>"
+            "<br><br>"
+            f"{aroma_text}"
+        )
     )
 
 
     # =====================================================
-    # 7. セルフケア
+    # 7 セルフケア
     # =====================================================
-    care_list = []
+    care = []
+
 
     if cold == "はい":
 
-        care_list.append(
+        care.append(
             "足元を温める"
         )
 
+
     if swelling == "はい":
 
-        care_list.append(
+        care.append(
             "軽い足首運動やストレッチ"
         )
 
+
     if tired == "はい":
 
-        care_list.append(
+        care.append(
             "足を休ませる時間をつくる"
         )
 
-    if dryness in [
+
+    if analysis[
+        "dryness"
+    ] in [
         "やや乾燥",
         "乾燥が目立つ"
     ]:
 
-        care_list.append(
+        care.append(
             "入浴後などに保湿する"
         )
+
 
     if callus not in [
         "なし",
         "判定困難"
     ]:
 
-        care_list.append(
+        care.append(
             "角質が目立つ部分に"
             "過度な負担をかけない"
         )
 
-    if not care_list:
 
-        care_list.append(
+    if not care:
+
+        care.append(
             "定期的な保湿と"
             "足裏ストレッチ"
         )
 
-    care_text = "・".join(
-        care_list
-    )
 
-    st.markdown(
-        "### 7. セルフケア"
-    )
-
-    st.markdown(
-        f"""
-        <div class="result-card">
-        {care_text}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-    # =====================================================
-    # 補助写真解析
-    # =====================================================
-    right_analysis = (
-        st.session_state.get(
-            "right_analysis"
+    result_card(
+        "7. セルフケア",
+        "・".join(
+            care
         )
     )
-
-    left_analysis = (
-        st.session_state.get(
-            "left_analysis"
-        )
-    )
-
-    if (
-        right_analysis
-        or left_analysis
-    ):
-
-        st.divider()
-
-        st.markdown(
-            "### 補助写真の解析"
-        )
-
-        if right_analysis:
-
-            st.write(
-                "**右足**"
-            )
-
-            st.write(
-                f"足指タイプ："
-                f"{right_analysis['toe_type']}"
-            )
-
-            st.write(
-                f"カラー："
-                f"{right_analysis['foot_color']}"
-            )
-
-            st.write(
-                f"乾燥："
-                f"{right_analysis['dryness']}"
-            )
-
-            st.write(
-                f"角質："
-                f"{right_analysis['callus']}"
-            )
-
-        if left_analysis:
-
-            st.write(
-                "**左足**"
-            )
-
-            st.write(
-                f"足指タイプ："
-                f"{left_analysis['toe_type']}"
-            )
-
-            st.write(
-                f"カラー："
-                f"{left_analysis['foot_color']}"
-            )
-
-            st.write(
-                f"乾燥："
-                f"{left_analysis['dryness']}"
-            )
-
-            st.write(
-                f"角質："
-                f"{left_analysis['callus']}"
-            )
 
 
     st.divider()
 
+
     st.caption(
-        "このサービスは医療行為や"
-        "医学的診断を目的としたものではありません。"
-        "画像の色味は照明やカメラ補正の"
+        "このサービスは医療行為・医学的診断を"
+        "目的としたものではありません。"
+        "足裏カラーは照明やカメラ補正の"
         "影響を受けます。"
-        "足裏カラー・性格傾向・心身傾向には、"
-        "リフレクソロジー上の考え方を"
-        "参考にしたウェルネス・"
-        "エンタメ要素が含まれます。"
+        "心身傾向にはリフレクソロジー上の"
+        "考え方を参考にした"
+        "ウェルネス・エンタメ要素が含まれます。"
     )
 
-    st.write("")
 
     if st.button(
         "最初から診断する"
