@@ -47,7 +47,18 @@ html, body, [class*="css"] {
 
 #MainMenu { visibility: hidden; }
 footer { visibility: hidden; }
-[data-testid="stToolbar"] { display: none !important; }
+
+[data-testid="stHeader"] {
+    display: none !important;
+}
+
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+[data-testid="stDecoration"] {
+    display: none !important;
+}
 
 .top-credit {
     width: 100%;
@@ -476,8 +487,8 @@ div.stButton > button {
 @media (max-width: 600px) {
     .block-container {
         padding-top: 0 !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
     }
 
     .top-credit {
@@ -495,11 +506,12 @@ div.stButton > button {
     }
 
 .header-banner-wrap {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-    margin-top: 0;
-    margin-bottom: 0;
+    width: calc(100% + 2rem);
+    margin-left: -1rem;
+    margin-right: -1rem;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    line-height: 0;
 }
 
     .question-space { height: 4px; }
