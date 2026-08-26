@@ -158,6 +158,14 @@ footer { visibility: hidden; }
     padding-top: 1px;
 }
 
+.score-explain {
+    margin-top: 7px;
+    font-family: "Yu Gothic", sans-serif;
+    font-size: 0.58rem;
+    color: #87928A;
+    line-height: 1.45;
+}
+
 .score-grade-guide-title {
     font-weight: 700;
     margin-bottom: 2px;
@@ -490,6 +498,9 @@ div.stButton > button {
     .score-grade-guide {
         min-width: 73px;
         font-size: 0.48rem;
+    }
+    .score-explain {
+        font-size: 0.54rem;
     }
     h3 { font-size: 1rem !important; }
     .small-note { font-size: 0.61rem; }
@@ -941,11 +952,14 @@ def analyze_color(rgb, mask):
 
     hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
     lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB)
+    rgb_f = rgb.astype(np.float32)
 
     valid = mask > 0
     brightness = hsv[:, :, 2]
-    valid &= brightness > 45
-    valid &= brightness < 248
+
+    # 極端な白飛び・黒つぶれを除外
+    valid &= brightness > 42
+    valid &= brightness < 250
 
     if valid.sum() < 100:
         valid = mask > 0
@@ -956,19 +970,45 @@ def analyze_color(rgb, mask):
     A = float(np.median(lab[:, :, 1][valid]))
     B = float(np.median(lab[:, :, 2][valid]))
 
-    # 前回まで使っていた判定ロジック
-    if S < 35 and V > 185:
+    R = float(np.median(rgb_f[:, :, 0][valid]))
+    G = float(np.median(rgb_f[:, :, 1][valid]))
+    Bl = float(np.median(rgb_f[:, :, 2][valid]))
+
+    red_bias = R - (G + Bl) / 2.0
+    yellow_bias = (R + G) / 2.0 - Bl
+    blue_bias = Bl - (R + G) / 2.0
+
+    # 色味は写真条件で動くため、HSVだけでなくLab/RGB差も併用する。
+    # 「標準的な色味」に偏りすぎないよう、弱い色傾向も拾う。
+    if V >= 198 and S <= 42 and A <= 136:
         result = "白っぽい"
-    elif (H <= 5 or H >= 176) and S >= 55 and A >= 135:
+
+    elif blue_bias >= 3 and A >= 132 and B <= 132:
+        result = "紫っぽい"
+
+    elif ((H <= 6 or H >= 174) and S >= 48 and A >= 137) or red_bias >= 24:
         result = "赤み強め"
-    elif 5 < H <= 17 and S >= 45:
+
+    elif (5 < H <= 18 and S >= 35) or (red_bias >= 10 and yellow_bias >= 14):
         result = "オレンジ寄り"
-    elif 17 < H <= 32 and S >= 45 and B >= 135:
+
+    elif (17 < H <= 34 and S >= 34 and B >= 134) or yellow_bias >= 24:
         result = "黄み強め"
+
+    elif A >= 132 and A <= 143 and S >= 22 and red_bias >= 5:
+        result = "ピンク寄り"
+
     else:
         result = "標準的な色味"
 
-    return result, {"H": H, "S": S, "V": V}
+    return result, {
+        "H": H, "S": S, "V": V,
+        "A": A, "B": B,
+        "R": R, "G": G, "Blue": Bl,
+        "red_bias": red_bias,
+        "yellow_bias": yellow_bias,
+        "blue_bias": blue_bias,
+    }
 
 
 def analyze_texture(rgb, mask):
@@ -1227,21 +1267,21 @@ elif st.session_state.step == 2:
     st.markdown(
         """
 <div class="guide-card">
-下のいずれか1枚以上をアップロードしてください。
+1枚でも診断できます。下のいずれか1枚以上をアップロードしてください。
 <div class="guide-list">・両足<br>・右足<br>・左足</div>
-<span class="guide-note">※より正確な判定には、3種類すべての撮影がおすすめです。</span>
+<span class="guide-note">※両足・右足・左足の写真がそろうと、より判定しやすくなります。</span>
 </div>
 """,
         unsafe_allow_html=True
     )
 
-    both_feet = st.file_uploader("両足の写真（任意）", type=["jpg", "jpeg", "png"], key="both_feet")
+    both_feet = st.file_uploader("両足の写真", type=["jpg", "jpeg", "png"], key="both_feet")
     show_upload_status(both_feet)
 
-    right_foot = st.file_uploader("右足の写真（任意）", type=["jpg", "jpeg", "png"], key="right_foot")
+    right_foot = st.file_uploader("右足の写真", type=["jpg", "jpeg", "png"], key="right_foot")
     show_upload_status(right_foot)
 
-    left_foot = st.file_uploader("左足の写真（任意）", type=["jpg", "jpeg", "png"], key="left_foot")
+    left_foot = st.file_uploader("左足の写真", type=["jpg", "jpeg", "png"], key="left_foot")
     show_upload_status(left_foot)
 
     st.markdown(
@@ -1419,7 +1459,19 @@ elif st.session_state.step == 3:
         score_message = "無理をせず、しっかり休むことを意識しましょう"
 
     st.markdown(
-        f"""<div class="step-box"><div class="score-result-row"><div class="score-result-main"><div class="score-result-title">診断結果：{score}点 <span class="score-grade-badge">評価 {score_grade}</span></div><div class="score-message">{score_message}</div></div><div class="score-grade-guide"><div class="score-grade-guide-title">評価基準</div>90〜100：A<br>75〜89：B<br>55〜74：C<br>40〜54：D<br>0〜39：E</div></div></div>""",
+        f"""<div class="step-box">
+<div class="score-result-row">
+  <div class="score-result-main">
+    <div class="score-result-title">総合コンディション：{score}点 <span class="score-grade-badge">評価 {score_grade}</span></div>
+    <div class="score-message">{score_message}</div>
+    <div class="score-explain">質問回答と足裏写真から算出した、今回の状態をみるための100点満点の参考スコアです。</div>
+  </div>
+  <div class="score-grade-guide">
+    <div class="score-grade-guide-title">評価基準</div>
+    90〜100：A<br>75〜89：B<br>55〜74：C<br>40〜54：D<br>0〜39：E
+  </div>
+</div>
+</div>""",
         unsafe_allow_html=True
     )
 
@@ -1477,8 +1529,8 @@ elif st.session_state.step == 3:
         color_text = (
             "写真では、足裏がやや黄色っぽく見えます。"
             "<br><br><span class='care-title'>黄色｜ストレス・消化器の疲れを意識したい色</span><br>"
-            "黄色っぽい足裏は、疲れやストレスがたまっている時のサインとして捉えることがあります。"
-            "食生活が乱れていたり、考えごとが続いていないかを振り返る目安にしてみてください。"
+            "黄色っぽい足裏は、リフレクソロジーではストレスや消化器まわりの疲れを意識する色として捉えることがあります。"
+            "食事の時間が不規則になっていないか、胃腸に負担をかけていないか、考えごとが続いていないかを振り返る目安にしてみてください。"
             "<br><br>"
             "自分のための時間を少しつくり、気分転換やゆっくり食事をとることを意識してみましょう。"
             "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。</span>"
@@ -1487,9 +1539,10 @@ elif st.session_state.step == 3:
     elif color == "赤み強め":
         color_text = (
             "写真では、足裏の赤みがやや強く見えます。"
-            "<br><br><span class='care-title'>赤色｜エネルギーが高まりやすい状態</span><br>"
+            "<br><br><span class='care-title'>赤色｜エネルギー過剰・自律神経の乱れを意識したい色</span><br>"
             "赤みが強い時は、活動量が多い時や気持ちが高ぶっている時など、"
-            "エネルギーが高まりやすい状態として捉えることがあります。"
+            "エネルギーが過剰になっている状態として捉えることがあります。"
+            "イライラしやすい、怒りっぽいなど、感情が不安定になりやすい時の目安として見ることもあります。"
             "<br><br>"
             "イライラしやすい、気持ちが落ち着かないと感じる時は、腹式呼吸を取り入れたり、"
             "意識的にリラックスする時間をつくってみてください。"
@@ -1558,25 +1611,44 @@ elif st.session_state.step == 3:
 
     # -----------------------------------------------------
     # 3 心と体
+    # 6つのコンディションの低い項目を使って個別化
     # -----------------------------------------------------
-    rest_score = 0
-    if cold == "はい":
-        rest_score += 2
-    if swelling == "はい":
-        rest_score += 1
-    if tired == "はい":
-        rest_score += 2
-    if len(fatigue_area) >= 2:
-        rest_score += 2
-    elif len(fatigue_area) == 1:
-        rest_score += 1
+    sorted_conditions = sorted(radar_values.items(), key=lambda x: x[1])
+    low1_name, low1_score = sorted_conditions[0]
+    low2_name, low2_score = sorted_conditions[1]
+    high_name, high_score = max(radar_values.items(), key=lambda x: x[1])
 
-    if rest_score >= 6:
-        mind_text = "今は疲れがたまりやすい状態かもしれません。休む時間や睡眠を少し意識してみましょう。"
-    elif rest_score >= 3:
-        mind_text = "少し疲れがたまっている可能性があります。短い休憩や気分転換を取り入れるのがおすすめです。"
+    condition_phrases = {
+        "めぐり": "冷えや足元のめぐり",
+        "すっきり感": "むくみや重だるさ",
+        "足の元気": "足の疲れや持久力",
+        "歩きやすさ": "歩行時の安定感",
+        "足裏状態": "乾燥や足裏への負担",
+        "休息状態": "休息や疲労の残り方",
+    }
+
+    if low1_score < 60:
+        mind_text = (
+            f"今回は「{low1_name}」が{low1_score}点、「{low2_name}」が{low2_score}点で、"
+            f"{condition_phrases[low1_name]}と{condition_phrases[low2_name]}を少し意識したい結果です。"
+        )
+        if high_score >= 80:
+            mind_text += (
+                f"<br><br>一方で「{high_name}」は{high_score}点と比較的良好です。"
+                "良い部分は保ちつつ、低めの項目を中心に無理のないセルフケアを取り入れてみましょう。"
+            )
+        else:
+            mind_text += "<br><br>短い休憩や足を休ませる時間をつくり、無理をしすぎないようにしてみましょう。"
+    elif low1_score < 75:
+        mind_text = (
+            f"全体として大きな崩れはありませんが、「{low1_name}」が{low1_score}点とやや低めです。"
+            f"{condition_phrases[low1_name]}を少し意識すると、より快適に過ごしやすくなりそうです。"
+        )
     else:
-        mind_text = "今は比較的バランスが取れているようです。今の状態を保ちながら、無理をしすぎないようにしましょう。"
+        mind_text = (
+            "6つのコンディションは全体的に良好な範囲です。"
+            "今の状態を保ちながら、疲れを感じた時だけ早めに休むことを意識してみましょう。"
+        )
 
     result_card("3. 今の心と体の傾向", mind_text, "card-green")
 
@@ -1649,8 +1721,14 @@ elif st.session_state.step == 3:
     else:
         personality = "今回は足型をはっきり判定できなかったため、この項目は判定できませんでした。"
 
+    personality += (
+        "<br><br><span class='small-note'>"
+        "※足型にまつわる一般的な見方をもとにした参考・エンタメコンテンツです。"
+        "</span>"
+    )
+
     result_card(
-        "6. 足の形から見る性格傾向",
+        "6. 足型から見る性格傾向（参考）",
         personality,
         "card-lavender",
         "compact-card"
@@ -1686,7 +1764,12 @@ elif st.session_state.step == 3:
             "</span>"
         )
     else:
-        reflex_text = "今回は特に疲れている場所が選択されていません。<br><br>足裏全体を気持ちいい程度の強さでゆっくりほぐしてみましょう。"
+        reflex_text = (
+            "今回は特に疲れている場所が選択されていません。"
+            "<br><br>特定の部位に強い疲れを感じていない状態です。"
+            "セルフケアをする場合は、足裏全体を30秒〜1分程度、"
+            "気持ちいいと感じる強さでゆっくりほぐしてみましょう。"
+        )
 
     result_card("7. 疲れた場所・足裏ポイント", reflex_text, "card-rose")
 
@@ -1696,37 +1779,52 @@ elif st.session_state.step == 3:
     aroma_map = {
         "リラックス": (
             "ラベンダー",
+            "<span class='care-title'>香りの特徴</span><br>"
             "やさしく落ち着いたフローラル系の香りです。"
-            "<br><br><span class='care-title'>香りの特徴</span><br>"
-            "リラックスしたい時や、気持ちをゆるめたい時、ゆっくり過ごしたい時間に取り入れやすい香りです。",
+            "<br><br><span class='care-title'>こんな時に</span><br>"
+            "気持ちをゆるめたい時、ゆっくり過ごしたい時、就寝前のリラックスタイムに取り入れやすい香りです。"
+            "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
+            "Q10で「リラックス」を選んでいるため、落ち着いた時間をつくりやすいラベンダーを選びました。",
             ASSET_DIR / "aroma_lavender.png"
         ),
         "リフレッシュ": (
             "レモン",
+            "<span class='care-title'>香りの特徴</span><br>"
             "すっきり爽やかな柑橘系の香りです。"
-            "<br><br><span class='care-title'>香りの特徴</span><br>"
-            "気分を切り替えたい時や、頭をすっきりさせたい時、朝や作業前にも取り入れやすい香りです。",
+            "<br><br><span class='care-title'>こんな時に</span><br>"
+            "気分を切り替えたい時、朝のスタート時、作業の合間に取り入れやすい香りです。"
+            "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
+            "Q10で「リフレッシュ」を選んでいるため、爽やかなレモンを選びました。",
             ASSET_DIR / "aroma_lemon.png"
         ),
         "集中": (
             "ローズマリー",
+            "<span class='care-title'>香りの特徴</span><br>"
             "シャープで清涼感のあるハーブ系の香りです。"
-            "<br><br><span class='care-title'>香りの特徴</span><br>"
-            "集中したい時や、気持ちを引き締めたい時、仕事や勉強の前後に取り入れやすい香りです。",
+            "<br><br><span class='care-title'>こんな時に</span><br>"
+            "仕事や勉強の前、気持ちを切り替えて集中したい時に取り入れやすい香りです。"
+            "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
+            "Q10で「集中」を選んでいるため、すっきりした印象のローズマリーを選びました。",
             ASSET_DIR / "aroma_rosemary.png"
         ),
         "睡眠": (
             "ラベンダー",
+            "<span class='care-title'>香りの特徴</span><br>"
             "やさしく落ち着いたフローラル系の香りです。"
-            "<br><br><span class='care-title'>香りの特徴</span><br>"
-            "寝る前や、静かに過ごしたい時、心を落ち着けたい夜の時間に取り入れやすい香りです。",
+            "<br><br><span class='care-title'>こんな時に</span><br>"
+            "寝る前や静かに過ごしたい夜、気持ちを落ち着けたい時間に取り入れやすい香りです。"
+            "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
+            "Q10で「睡眠」を選んでいるため、就寝前にも取り入れやすいラベンダーを選びました。",
             ASSET_DIR / "aroma_lavender.png"
         ),
         "気分転換": (
             "スイートオレンジ",
+            "<span class='care-title'>香りの特徴</span><br>"
             "甘くやわらかな柑橘系の香りです。"
-            "<br><br><span class='care-title'>香りの特徴</span><br>"
-            "気分転換したい時や、穏やかな気持ちで過ごしたい時、リラックスしたい時間に取り入れやすい香りです。",
+            "<br><br><span class='care-title'>こんな時に</span><br>"
+            "気分を切り替えたい時、穏やかに過ごしたい時、休憩時間に取り入れやすい香りです。"
+            "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
+            "Q10で「気分転換」を選んでいるため、明るく親しみやすいスイートオレンジを選びました。",
             ASSET_DIR / "aroma_orange.png"
         ),
     }
