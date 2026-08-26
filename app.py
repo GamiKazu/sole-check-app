@@ -369,17 +369,6 @@ div.stButton > button {
     flex: none !important;
 }
 
-.st-key-fatigue_grid [data-testid="stHorizontalBlock"] {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-    gap: 5px 12px !important;
-}
-
-.st-key-fatigue_grid [data-testid="column"] {
-    width: auto !important;
-    min-width: 0 !important;
-    flex: none !important;
-}
 
 /* レーダーチャート */
 .radar-card {
@@ -1268,54 +1257,16 @@ if st.session_state.step == 1:
     )
     st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    st.write("Q7. 今、疲れを感じる場所はありますか？")
-    fatigue_area = []
-
-    with st.container(key="fatigue_grid"):
-        row1 = st.columns(2)
-        with row1[0]:
-            if st.checkbox("頭・目", key="fatigue_head"):
-                fatigue_area.append("頭・目")
-        with row1[1]:
-            if st.checkbox("首", key="fatigue_neck"):
-                fatigue_area.append("首")
-
-        row2 = st.columns(2)
-        with row2[0]:
-            if st.checkbox("肩", key="fatigue_shoulder"):
-                fatigue_area.append("肩")
-        with row2[1]:
-            if st.checkbox("背中", key="fatigue_back"):
-                fatigue_area.append("背中")
-
-        row3 = st.columns(2)
-        with row3[0]:
-            if st.checkbox("腰", key="fatigue_waist"):
-                fatigue_area.append("腰")
-        with row3[1]:
-            if st.checkbox("胃まわり", key="fatigue_stomach"):
-                fatigue_area.append("胃まわり")
-
-        row4 = st.columns(2)
-        with row4[0]:
-            if st.checkbox("脚", key="fatigue_leg"):
-                fatigue_area.append("脚")
-        with row4[1]:
-            if st.checkbox("全身", key="fatigue_all"):
-                fatigue_area.append("全身")
-
-    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
-
     sole_wear = st.selectbox(
-        "Q8. 靴底はどこが減りやすいですか？",
+        "Q7. 靴底はどこが減りやすいですか？",
         ["分からない", "かかとの外側", "かかとの内側", "つま先側", "全体的に均等"]
     )
     st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    stumble = st.radio("Q9. 歩いている時につまずきやすいですか？", ["はい", "いいえ"], horizontal=True)
+    stumble = st.radio("Q8. 歩いている時につまずきやすいですか？", ["はい", "いいえ"], horizontal=True)
     st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    aroma_goal = st.selectbox("Q10. 今、一番求めているものは？", ["リラックス", "リフレッシュ", "集中", "睡眠", "気分転換"])
+    aroma_goal = st.selectbox("Q9. 今、一番求めているものは？", ["リラックス", "リフレッシュ", "集中", "睡眠", "気分転換"])
     st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
     if st.button("次へ", type="primary", use_container_width=True):
@@ -1325,7 +1276,6 @@ if st.session_state.step == 1:
         st.session_state.standing = standing
         st.session_state.shoes = shoes
         st.session_state.foot_concern = foot_concern
-        st.session_state.fatigue_area = fatigue_area
         st.session_state.sole_wear = sole_wear
         st.session_state.stumble = stumble
         st.session_state.aroma_goal = aroma_goal
@@ -1441,7 +1391,6 @@ elif st.session_state.step == 3:
     swelling = st.session_state.swelling
     tired = st.session_state.tired
     standing = st.session_state.standing
-    fatigue_area = st.session_state.fatigue_area
     sole_wear = st.session_state.sole_wear
     stumble = st.session_state.stumble
     aroma_goal = st.session_state.aroma_goal
@@ -1489,9 +1438,12 @@ elif st.session_state.step == 3:
         sole_condition -= 8
 
     rest_balance = 100
-    rest_balance -= min(36, len(fatigue_area) * 8)
     if tired == "はい":
-        rest_balance -= 12
+        rest_balance -= 28
+    if standing == "はい":
+        rest_balance -= 10
+    if cold == "はい":
+        rest_balance -= 6
 
     radar_values = {
         "血流の良さ": clamp(circulation, 35, 100),
@@ -1707,7 +1659,7 @@ elif st.session_state.step == 3:
     if low1_score < 60:
         mind_text = (
             f"今回は「{low1_name}」が{low1_score}点、「{low2_name}」が{low2_score}点で、"
-            f"{condition_phrases[low1_name]}と{condition_phrases[low2_name]}を少し意識したい結果です。"
+            f"{condition_phrases.get(low1_name, low1_name)}と{condition_phrases.get(low2_name, low2_name)}を少し意識したい結果です。"
         )
         if high_score >= 80:
             mind_text += (
@@ -1719,7 +1671,7 @@ elif st.session_state.step == 3:
     elif low1_score < 75:
         mind_text = (
             f"全体として大きな崩れはありませんが、「{low1_name}」が{low1_score}点とやや低めです。"
-            f"{condition_phrases[low1_name]}を少し意識すると、より快適に過ごしやすくなりそうです。"
+            f"{condition_phrases.get(low1_name, low1_name)}を少し意識すると、より快適に過ごしやすくなりそうです。"
         )
     else:
         mind_text = (
@@ -1832,12 +1784,9 @@ elif st.session_state.step == 3:
     elif aroma_goal in ["リラックス", "睡眠"]:
         personality_scores["穏やか"] += 2
 
-    # 疲労部位の数
-    if len(fatigue_area) >= 4:
-        personality_scores["慎重"] += 2
-    elif len(fatigue_area) == 0:
-        personality_scores["活動的"] += 1
-        personality_scores["穏やか"] += 1
+    # 体調回答から性格方向を補助
+    if cold == "はい" or swelling == "はい":
+        personality_scores["慎重"] += 1
     else:
         personality_scores["穏やか"] += 1
 
@@ -1929,41 +1878,51 @@ elif st.session_state.step == 3:
     # -----------------------------------------------------
     # 7 足裏ポイント
     # -----------------------------------------------------
-    reflex_map = {
-        "頭・目": "親指まわり",
-        "首": "親指の付け根",
-        "肩": "足指の付け根〜小指側",
-        "背中": "足裏の内側",
-        "腰": "土踏まずの内側〜かかと寄り",
-        "胃まわり": "土踏まずの上側",
-        "脚": "かかとまわり",
-        "全身": "足裏全体",
-    }
+    point_blocks = []
 
-    if fatigue_area:
-        blocks = []
-        for area in fatigue_area:
-            blocks.append(
-                f"<span class='care-title'>{area}</span><br>"
-                f"足裏のおすすめポイント：{reflex_map[area]}"
-            )
-
-        reflex_text = (
-            "<br><br>".join(blocks)
-            + "<br><br><span class='small-note'>"
-            "リフレクソロジーでは、これらの場所を体の各部位に対応する「反射区」として扱います。"
-            "心地よい強さで5〜10秒ほどゆっくり押してみてください。"
-            "</span>"
-        )
-    else:
-        reflex_text = (
-            "今回は特に疲れている場所が選択されていません。"
-            "<br><br>特定の部位に強い疲れを感じていない状態です。"
-            "セルフケアをする場合は、足裏全体を30秒〜1分程度、"
-            "気持ちいいと感じる強さでゆっくりほぐしてみましょう。"
+    if cold == "はい":
+        point_blocks.append(
+            "<span class='care-title'>足先〜足裏全体</span><br>"
+            "冷えが気になる時は、足先から足裏全体をやさしくほぐし、足首もゆっくり動かしてみましょう。"
         )
 
-    result_card("7. 疲れた場所・足裏ポイント", reflex_text, "card-rose")
+    if swelling == "はい":
+        point_blocks.append(
+            "<span class='care-title'>足首〜かかとまわり</span><br>"
+            "むくみが気になる時は、足首を回したり、かかと周辺を心地よい強さでほぐしてみましょう。"
+        )
+
+    if tired == "はい":
+        point_blocks.append(
+            "<span class='care-title'>土踏まず〜足裏中央</span><br>"
+            "足の疲れが気になる時は、土踏まずから足裏中央をゆっくり押して休ませるのがおすすめです。"
+        )
+
+    if analysis["hard_part"] == "足の前側":
+        point_blocks.append(
+            "<span class='care-title'>足指の付け根〜前足部</span><br>"
+            "写真では足の前側に負担がかかっている可能性があります。強く押しすぎず、広い面でやさしくほぐしましょう。"
+        )
+    elif analysis["hard_part"] == "かかと":
+        point_blocks.append(
+            "<span class='care-title'>かかとまわり</span><br>"
+            "写真ではかかとに負担がかかっている可能性があります。保湿とあわせて、周辺をゆっくりほぐしてみましょう。"
+        )
+
+    if not point_blocks:
+        point_blocks.append(
+            "<span class='care-title'>足裏全体</span><br>"
+            "今回は大きな偏りが少ない結果です。足裏全体を30秒〜1分ほど、気持ちいいと感じる強さでゆっくりほぐしてみましょう。"
+        )
+
+    reflex_text = (
+        "<br><br>".join(point_blocks)
+        + "<br><br><span class='small-note'>"
+        "無理に強く押さず、痛みが出る場合は中止してください。"
+        "</span>"
+    )
+
+    result_card("7. おすすめ足裏ポイント", reflex_text, "card-rose")
 
     # -----------------------------------------------------
     # 8 アロマ
@@ -1976,7 +1935,7 @@ elif st.session_state.step == 3:
             "<br><br><span class='care-title'>こんな時に</span><br>"
             "気持ちをゆるめたい時、ゆっくり過ごしたい時、就寝前のリラックスタイムに取り入れやすい香りです。"
             "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
-            "Q10で「リラックス」を選んでいるため、落ち着いた時間をつくりやすいラベンダーを選びました。",
+            "Q9で「リラックス」を選んでいるため、落ち着いた時間をつくりやすいラベンダーを選びました。",
             ASSET_DIR / "aroma_lavender.png"
         ),
         "リフレッシュ": (
@@ -1986,7 +1945,7 @@ elif st.session_state.step == 3:
             "<br><br><span class='care-title'>こんな時に</span><br>"
             "気分を切り替えたい時、朝のスタート時、作業の合間に取り入れやすい香りです。"
             "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
-            "Q10で「リフレッシュ」を選んでいるため、爽やかなレモンを選びました。",
+            "Q9で「リフレッシュ」を選んでいるため、爽やかなレモンを選びました。",
             ASSET_DIR / "aroma_lemon.png"
         ),
         "集中": (
@@ -1996,7 +1955,7 @@ elif st.session_state.step == 3:
             "<br><br><span class='care-title'>こんな時に</span><br>"
             "仕事や勉強の前、気持ちを切り替えて集中したい時に取り入れやすい香りです。"
             "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
-            "Q10で「集中」を選んでいるため、すっきりした印象のローズマリーを選びました。",
+            "Q9で「集中」を選んでいるため、すっきりした印象のローズマリーを選びました。",
             ASSET_DIR / "aroma_rosemary.png"
         ),
         "睡眠": (
@@ -2006,7 +1965,7 @@ elif st.session_state.step == 3:
             "<br><br><span class='care-title'>こんな時に</span><br>"
             "寝る前や静かに過ごしたい夜、気持ちを落ち着けたい時間に取り入れやすい香りです。"
             "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
-            "Q10で「睡眠」を選んでいるため、就寝前にも取り入れやすいラベンダーを選びました。",
+            "Q9で「睡眠」を選んでいるため、就寝前にも取り入れやすいラベンダーを選びました。",
             ASSET_DIR / "aroma_lavender.png"
         ),
         "気分転換": (
@@ -2016,7 +1975,7 @@ elif st.session_state.step == 3:
             "<br><br><span class='care-title'>こんな時に</span><br>"
             "気分を切り替えたい時、穏やかに過ごしたい時、休憩時間に取り入れやすい香りです。"
             "<br><br><span class='care-title'>今回おすすめする理由</span><br>"
-            "Q10で「気分転換」を選んでいるため、明るく親しみやすいスイートオレンジを選びました。",
+            "Q9で「気分転換」を選んでいるため、明るく親しみやすいスイートオレンジを選びました。",
             ASSET_DIR / "aroma_orange.png"
         ),
     }
