@@ -185,20 +185,31 @@ footer { visibility: hidden; }
     color: #405348;
 }
 
-.result-image-wrap {
+ .result-image-wrap {
     width: 100%;
     display: flex;
     justify-content: center;
-    margin: 2px 0 15px 0;
+    margin: 12px 0 15px 0;
 }
 
 .result-image {
-    width: 100%;
-    max-width: 520px;
+    width: auto;
     height: auto;
     display: block;
-    border-radius: 13px;
-    background: rgba(255,255,255,0.55);
+    object-fit: contain;
+    background: transparent;
+}
+
+.result-image.foot-image {
+    max-width: 210px;
+}
+
+.result-image.shoe-image {
+    max-width: 290px;
+}
+
+.result-image.aroma-image {
+    max-width: 190px;
 }
 
 .care-title {
@@ -445,6 +456,32 @@ def result_card(title, body, card_class, extra_class="", image_path=None, image_
 <div class="result-card {card_class} {extra_class}">
 {image_html}
 {body}
+</div>
+""",
+        unsafe_allow_html=True
+    )
+
+
+def result_card_with_image(title, result_name, description, card_class, image_path, image_alt="", image_class="foot-image", extra_html=""):
+    st.markdown(f"### {title}")
+
+    image_html = ""
+    if image_path:
+        uri = file_to_data_uri(image_path)
+        if uri:
+            image_html = (
+                f'<div class="result-image-wrap">'
+                f'<img class="result-image {image_class}" src="{uri}" alt="{image_alt}">'
+                f'</div>'
+            )
+
+    st.markdown(
+        f"""
+<div class="result-card {card_class}">
+<span class="result-main">{result_name}</span>
+{image_html}
+<div>{description}</div>
+{extra_html}
 </div>
 """,
         unsafe_allow_html=True
@@ -1293,12 +1330,14 @@ elif st.session_state.step == 3:
         foot_image = None
         shoe_image = None
 
-    result_card(
+    result_card_with_image(
         "1. 足の形",
-        f"<span class='result-main'>{shape}</span><br><br>{shape_text}",
+        shape,
+        shape_text,
         "card-beige",
         image_path=foot_image,
-        image_alt=f"{shape}の参考イラスト"
+        image_alt=f"{shape}の参考イラスト",
+        image_class="foot-image"
     )
 
     # -----------------------------------------------------
@@ -1394,12 +1433,14 @@ elif st.session_state.step == 3:
     if tired == "はい":
         shoe_text += "<br><br>足が疲れやすい場合は、靴底のやわらかさも確認してみましょう。"
 
-    result_card(
+    result_card_with_image(
         "5. おすすめの靴",
-        f"<span class='result-main'>{shoe_title}</span><br><br>{shoe_text}",
+        shoe_title,
+        shoe_text,
         "card-cream",
         image_path=shoe_image,
-        image_alt=f"{shape}に合いやすい男女別の靴イラスト"
+        image_alt=f"{shape}に合いやすい男女別の靴イラスト",
+        image_class="shoe-image"
     )
 
     # -----------------------------------------------------
@@ -1488,12 +1529,14 @@ elif st.session_state.step == 3:
 
     aroma, aroma_text, aroma_image = aroma_map[aroma_goal]
 
-    result_card(
+    result_card_with_image(
         "8. おすすめアロマ",
-        f"<span class='result-main'>{aroma}</span><br><br>{aroma_text}",
+        aroma,
+        aroma_text,
         "card-aroma",
         image_path=aroma_image,
-        image_alt=f"{aroma}の参考イラスト"
+        image_alt=f"{aroma}の参考イラスト",
+        image_class="aroma-image"
     )
 
     # -----------------------------------------------------
