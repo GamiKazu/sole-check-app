@@ -1,4 +1,6 @@
+import base64
 import gc
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -17,6 +19,8 @@ st.set_page_config(
 if "step" not in st.session_state:
     st.session_state.step = 1
 
+ASSET_DIR = Path("assets")
+
 
 # =========================================================
 # CSS
@@ -24,14 +28,8 @@ if "step" not in st.session_state:
 st.markdown(
     """
 <style>
-
 html, body, [class*="css"] {
-    font-family:
-        "Yu Gothic",
-        "YuGothic",
-        "Hiragino Kaku Gothic ProN",
-        "Meiryo",
-        sans-serif;
+    font-family: "Yu Gothic", "YuGothic", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
 }
 
 .block-container {
@@ -40,22 +38,10 @@ html, body, [class*="css"] {
     padding-bottom: 4rem;
 }
 
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+[data-testid="stToolbar"] { display: none !important; }
 
-/* Streamlit UI */
-#MainMenu {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
-}
-
-[data-testid="stToolbar"] {
-    display: none !important;
-}
-
-
-/* Created by */
 .top-credit {
     width: 100%;
     text-align: right;
@@ -67,16 +53,9 @@ footer {
     margin-bottom: 10px;
 }
 
-
-/* タイトル */
 .main-title {
     text-align: center;
-    font-family:
-        "Yu Mincho",
-        "YuMincho",
-        "Hiragino Mincho ProN",
-        serif;
-
+    font-family: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
     font-size: 2.5rem;
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -95,27 +74,13 @@ footer {
     margin-bottom: 2.2rem;
 }
 
-
-/* STEP */
 .step-box {
     padding: 15px 20px;
     border-radius: 16px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #E5EFE8 0%,
-            #F6EEE5 100%
-        );
-
+    background: linear-gradient(135deg, #E5EFE8 0%, #F6EEE5 100%);
     border: 1px solid #D9E4DC;
     color: #42564A;
-
-    font-family:
-        "Yu Mincho",
-        "Hiragino Mincho ProN",
-        serif;
-
+    font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
     font-weight: 700;
     font-size: 1.15rem;
     margin-bottom: 1.45rem;
@@ -129,23 +94,15 @@ footer {
     margin-top: 8px;
 }
 
+.question-space { height: 12px; }
 
-/* 質問 */
-.question-space {
-    height: 12px;
-}
-
-
-/* STEP2説明 */
 .guide-card {
     background: #FBF7F0;
     border: 1px solid #EADFD2;
     border-radius: 17px;
-
     padding: 14px 16px;
     margin-top: 3px;
     margin-bottom: 16px;
-
     color: #474747;
     font-size: 0.90rem;
     line-height: 1.45;
@@ -163,8 +120,6 @@ footer {
     line-height: 1.4;
 }
 
-
-/* 撮影補足 */
 .photo-note {
     color: #979797;
     font-size: 0.61rem;
@@ -173,33 +128,9 @@ footer {
     margin-bottom: 17px;
 }
 
-
-/* =========================================================
-   File Uploader
-   ========================================================= */
-
-/* 200MBなどの補足だけ隠す */
-[data-testid="stFileUploader"] small {
-    display: none !important;
-}
-
-/* ドラッグ＆ドロップ説明を隠す */
-[data-testid="stFileUploaderDropzoneInstructions"] {
-    display: none !important;
-}
-
-/*
-重要：
-以前使っていた
-section > div > div:last-child
-を消すCSSは使わない。
-
-これによりアップロード後の
-ファイル名・削除ボタンがちゃんと残る。
-*/
-
-
-/* アップロード済みファイル表示 */
+/* File uploader */
+[data-testid="stFileUploader"] small { display: none !important; }
+[data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
 [data-testid="stFileUploaderFile"] {
     background: #EDF5EF !important;
     border: 1px solid #D8E7DC !important;
@@ -207,20 +138,14 @@ section > div > div:last-child
     padding: 6px 9px !important;
 }
 
-
-/* アップロード済み案内 */
 .upload-status {
     background: #EDF5EF;
     border: 1px solid #D8E7DC;
     border-radius: 10px;
-
     padding: 7px 11px;
-
     margin-top: 5px;
     margin-bottom: 13px;
-
     color: #536C5B;
-
     font-size: 0.73rem;
     line-height: 1.4;
     font-weight: 600;
@@ -233,65 +158,47 @@ section > div > div:last-child
     margin-top: 3px;
 }
 
-
-/* 結果カード */
+/* 結果 */
 .result-card {
     border-radius: 18px;
     padding: 18px 20px;
     margin-bottom: 20px;
-
     line-height: 1.58;
     font-size: 0.91rem;
     color: #363636;
-
     border: 1px solid rgba(70, 90, 75, 0.09);
-
-    box-shadow:
-        0 4px 14px
-        rgba(70, 80, 70, 0.045);
+    box-shadow: 0 4px 14px rgba(70, 80, 70, 0.045);
 }
 
-.card-beige {
-    background: #FAF4EA;
-}
-
-.card-orange {
-    background: #FFF0E5;
-}
-
-.card-green {
-    background: #EDF5EF;
-}
-
-.card-sage {
-    background: #E6F0E9;
-}
-
-.card-cream {
-    background: #FCF7E9;
-}
-
-.card-lavender {
-    background: #F1ECF6;
-}
-
-.card-rose {
-    background: #F9ECEA;
-}
-
-.card-aroma {
-    background:
-        linear-gradient(
-            135deg,
-            #F0EAF5 0%,
-            #F9F2E8 100%
-        );
-}
+.card-beige { background: #FAF4EA; }
+.card-orange { background: #FFF0E5; }
+.card-green { background: #EDF5EF; }
+.card-sage { background: #E6F0E9; }
+.card-cream { background: #FCF7E9; }
+.card-lavender { background: #F1ECF6; }
+.card-rose { background: #F9ECEA; }
+.card-aroma { background: linear-gradient(135deg, #F0EAF5 0%, #F9F2E8 100%); }
 
 .result-main {
     font-size: 1.05rem;
     font-weight: 700;
     color: #405348;
+}
+
+.result-image-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 2px 0 15px 0;
+}
+
+.result-image {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    display: block;
+    border-radius: 13px;
+    background: rgba(255,255,255,0.55);
 }
 
 .care-title {
@@ -310,8 +217,6 @@ section > div > div:last-child
     padding-bottom: 15px !important;
 }
 
-
-/* 免責 */
 .disclaimer {
     color: #AAAAAA;
     font-size: 0.48rem;
@@ -320,20 +225,12 @@ section > div > div:last-child
     margin-bottom: 14px;
 }
 
-
-/* 見出し */
 h3 {
-    font-family:
-        "Yu Mincho",
-        "Hiragino Mincho ProN",
-        serif !important;
-
+    font-family: "Yu Mincho", "Hiragino Mincho ProN", serif !important;
     color: #42564A !important;
     letter-spacing: 0.02em;
 }
 
-
-/* ボタン */
 div.stButton > button {
     width: 100%;
     min-height: 50px;
@@ -342,15 +239,9 @@ div.stButton > button {
     font-weight: 700;
 }
 
-
-/* STEP2ボタン */
 .st-key-action_buttons [data-testid="stHorizontalBlock"] {
     display: grid !important;
-
-    grid-template-columns:
-        minmax(0, 1fr)
-        minmax(0, 1fr) !important;
-
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
     gap: 10px !important;
 }
 
@@ -360,15 +251,9 @@ div.stButton > button {
     flex: none !important;
 }
 
-
-/* Q7 */
 .st-key-fatigue_grid [data-testid="stHorizontalBlock"] {
     display: grid !important;
-
-    grid-template-columns:
-        minmax(0, 1fr)
-        minmax(0, 1fr) !important;
-
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
     gap: 5px 12px !important;
 }
 
@@ -378,88 +263,122 @@ div.stButton > button {
     flex: none !important;
 }
 
+/* レーダーチャート */
+.radar-card {
+    background: #FBFCFA;
+    border: 1px solid #E0E8E2;
+    border-radius: 18px;
+    padding: 14px 10px 8px 10px;
+    margin-top: -2px;
+    margin-bottom: 24px;
+}
 
-/* スマホ */
+.radar-title {
+    text-align: center;
+    color: #52665A;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.radar-note {
+    text-align: center;
+    color: #929A94;
+    font-size: 0.55rem;
+    margin-top: -2px;
+}
+
+.radar-card svg {
+    width: 100%;
+    max-width: 430px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    overflow: visible;
+}
+
+.radar-grid {
+    fill: none;
+    stroke: #D9E1DB;
+    stroke-width: 1;
+}
+
+.radar-axis {
+    stroke: #E3E9E5;
+    stroke-width: 1;
+}
+
+.radar-fill {
+    fill: rgba(127, 163, 139, 0.22);
+    stroke: #6F927B;
+    stroke-width: 2.1;
+}
+
+.radar-dot {
+    fill: #6F927B;
+}
+
+.radar-label {
+    font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+    font-size: 13px;
+    fill: #53655B;
+    font-weight: 600;
+}
+
+.radar-value {
+    font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+    font-size: 10px;
+    fill: #8A968E;
+}
+
 @media (max-width: 600px) {
-
     .block-container {
         padding-top: 2.7rem;
         padding-left: 1rem;
         padding-right: 1rem;
     }
-
     .top-credit {
         font-size: 9px;
         margin-top: 26px;
         margin-bottom: 10px;
     }
-
-    .main-title {
-        font-size: 2rem;
-    }
-
+    .main-title { font-size: 2rem; }
     .english-title {
         font-size: 0.65rem;
         letter-spacing: 0.13em;
         margin-bottom: 1.9rem;
     }
-
-    .question-space {
-        height: 9px;
-    }
-
+    .question-space { height: 9px; }
     .guide-card {
         padding: 13px 15px;
         font-size: 0.86rem;
         line-height: 1.4;
     }
-
     .guide-list {
         margin-top: 8px;
         margin-bottom: 8px;
     }
-
-    .guide-note {
-        font-size: 0.56rem;
-    }
-
-    .photo-note {
-        font-size: 0.57rem;
-    }
-
+    .guide-note { font-size: 0.56rem; }
+    .photo-note { font-size: 0.57rem; }
     .upload-status {
         font-size: 0.68rem;
         padding: 7px 10px;
     }
-
-    .upload-change-note {
-        font-size: 0.54rem;
-    }
-
+    .upload-change-note { font-size: 0.54rem; }
     .result-card {
         padding: 16px 17px;
         font-size: 0.88rem;
         line-height: 1.55;
         margin-bottom: 18px;
     }
-
-    .result-main {
-        font-size: 1rem;
-    }
-
-    h3 {
-        font-size: 1rem !important;
-    }
-
-    .small-note {
-        font-size: 0.61rem;
-    }
-
-    .disclaimer {
-        font-size: 0.44rem;
-    }
+    .result-main { font-size: 1rem; }
+    h3 { font-size: 1rem !important; }
+    .small-note { font-size: 0.61rem; }
+    .disclaimer { font-size: 0.44rem; }
+    .radar-card { padding: 10px 3px 7px 3px; }
+    .radar-label { font-size: 12px; }
+    .radar-value { font-size: 9px; }
 }
-
 </style>
 """,
     unsafe_allow_html=True
@@ -471,37 +390,25 @@ div.stButton > button {
 # =========================================================
 st.markdown(
     """
-<div class="top-credit">
-Created by GamiKazu
-</div>
-
-<div class="main-title">
-足裏タイプ診断
-</div>
-
-<div class="english-title">
-REFLEXOLOGY × AROMATHERAPY
-</div>
+<div class="top-credit">Created by GamiKazu</div>
+<div class="main-title">足裏タイプ診断</div>
+<div class="english-title">REFLEXOLOGY × AROMATHERAPY</div>
 """,
     unsafe_allow_html=True
 )
 
 
 # =========================================================
-# アップロード済み表示
+# 共通UI
 # =========================================================
 def show_upload_status(uploaded_file):
-
     if uploaded_file is None:
         return
-
-    filename = uploaded_file.name
 
     st.markdown(
         f"""
 <div class="upload-status">
-✓ アップロード済み：{filename}
-
+✓ アップロード済み：{uploaded_file.name}
 <div class="upload-change-note">
 別の写真に変える場合は、上のファイル表示から削除して選び直してください。
 </div>
@@ -511,559 +418,297 @@ def show_upload_status(uploaded_file):
     )
 
 
-# =========================================================
-# 画像読み込み・軽量化
-# =========================================================
-def uploaded_to_rgb(
-    uploaded_file,
-    max_side=640
-):
+def file_to_data_uri(path):
+    path = Path(path)
+    if not path.exists():
+        return None
+    mime = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
+    encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
+    return f"data:{mime};base64,{encoded}"
 
-    uploaded_file.seek(0)
 
-    with Image.open(uploaded_file) as image:
+def result_card(title, body, card_class, extra_class="", image_path=None, image_alt=""):
+    st.markdown(f"### {title}")
 
-        image = ImageOps.exif_transpose(image)
+    image_html = ""
+    if image_path:
+        uri = file_to_data_uri(image_path)
+        if uri:
+            image_html = (
+                f'<div class="result-image-wrap">'
+                f'<img class="result-image" src="{uri}" alt="{image_alt}">'
+                f'</div>'
+            )
 
-        image = image.convert("RGB")
+    st.markdown(
+        f"""
+<div class="result-card {card_class} {extra_class}">
+{image_html}
+{body}
+</div>
+""",
+        unsafe_allow_html=True
+    )
 
-        image.thumbnail(
-            (
-                max_side,
-                max_side
-            ),
-            Image.Resampling.LANCZOS
+
+def clamp(value, low=0, high=100):
+    return max(low, min(high, int(round(value))))
+
+
+def radar_svg(values):
+    labels = list(values.keys())
+    scores = [clamp(values[k]) for k in labels]
+
+    cx, cy = 210, 175
+    max_r = 108
+    angles = [-90, -30, 30, 90, 150, 210]
+
+    import math
+
+    def pt(angle_deg, radius):
+        a = math.radians(angle_deg)
+        return (cx + radius * math.cos(a), cy + radius * math.sin(a))
+
+    grid_polys = []
+    for ratio in [0.25, 0.5, 0.75, 1.0]:
+        coords = [pt(a, max_r * ratio) for a in angles]
+        points = " ".join(f"{x:.1f},{y:.1f}" for x, y in coords)
+        grid_polys.append(f'<polygon class="radar-grid" points="{points}"/>')
+
+    axes = []
+    for a in angles:
+        x, y = pt(a, max_r)
+        axes.append(f'<line class="radar-axis" x1="{cx}" y1="{cy}" x2="{x:.1f}" y2="{y:.1f}"/>')
+
+    data_coords = [pt(a, max_r * s / 100.0) for a, s in zip(angles, scores)]
+    data_points = " ".join(f"{x:.1f},{y:.1f}" for x, y in data_coords)
+
+    dots = "".join(
+        f'<circle class="radar-dot" cx="{x:.1f}" cy="{y:.1f}" r="3.1"/>'
+        for x, y in data_coords
+    )
+
+    label_positions = [
+        (210, 35, "middle"),
+        (360, 98, "start"),
+        (360, 260, "start"),
+        (210, 330, "middle"),
+        (60, 260, "end"),
+        (60, 98, "end"),
+    ]
+
+    label_html = []
+    for label, score, (x, y, anchor) in zip(labels, scores, label_positions):
+        label_html.append(
+            f'<text class="radar-label" x="{x}" y="{y}" text-anchor="{anchor}">{label}</text>'
+            f'<text class="radar-value" x="{x}" y="{y+15}" text-anchor="{anchor}">{score}</text>'
         )
 
-        rgb = np.asarray(
-            image,
-            dtype=np.uint8
-        ).copy()
+    return f"""
+<div class="radar-card">
+<div class="radar-title">6つのコンディション</div>
+<svg viewBox="0 0 420 350" role="img" aria-label="6項目のレーダーチャート">
+{''.join(grid_polys)}
+{''.join(axes)}
+<polygon class="radar-fill" points="{data_points}"/>
+{dots}
+{''.join(label_html)}
+</svg>
+<div class="radar-note">※100に近いほど、今回の回答・写真では良好な傾向です。</div>
+</div>
+"""
 
+
+# =========================================================
+# 画像解析
+# =========================================================
+def uploaded_to_rgb(uploaded_file, max_side=640):
+    uploaded_file.seek(0)
+    with Image.open(uploaded_file) as image:
+        image = ImageOps.exif_transpose(image).convert("RGB")
+        image.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+        rgb = np.asarray(image, dtype=np.uint8).copy()
     return rgb
 
 
-# =========================================================
-# 最大輪郭
-# =========================================================
 def largest_contour(mask):
-
-    contours, _ = cv2.findContours(
-        mask,
-        cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE
-    )
-
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
         return None
-
-    return max(
-        contours,
-        key=cv2.contourArea
-    )
+    return max(contours, key=cv2.contourArea)
 
 
-# =========================================================
-# マスク整理
-# =========================================================
 def clean_mask(binary):
-
-    kernel = np.ones(
-        (5, 5),
-        np.uint8
-    )
-
-    binary = cv2.morphologyEx(
-        binary,
-        cv2.MORPH_CLOSE,
-        kernel,
-        iterations=2
-    )
-
-    binary = cv2.morphologyEx(
-        binary,
-        cv2.MORPH_OPEN,
-        kernel,
-        iterations=1
-    )
-
+    kernel = np.ones((5, 5), np.uint8)
+    binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=2)
+    binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
     contour = largest_contour(binary)
-
     if contour is None:
         return None
-
     clean = np.zeros_like(binary)
-
-    cv2.drawContours(
-        clean,
-        [contour],
-        -1,
-        255,
-        -1
-    )
-
+    cv2.drawContours(clean, [contour], -1, 255, -1)
     return clean
 
 
-# =========================================================
-# 足領域検出
-# =========================================================
 def segment_foot(rgb):
-
     h, w = rgb.shape[:2]
-
     if h < 70 or w < 40:
         return None
 
-    patch_h = max(
-        5,
-        int(h * 0.07)
-    )
+    patch_h = max(5, int(h * 0.07))
+    patch_w = max(5, int(w * 0.07))
 
-    patch_w = max(
-        5,
-        int(w * 0.07)
-    )
+    corners = np.concatenate([
+        rgb[:patch_h, :patch_w].reshape(-1, 3),
+        rgb[:patch_h, -patch_w:].reshape(-1, 3),
+        rgb[-patch_h:, :patch_w].reshape(-1, 3),
+        rgb[-patch_h:, -patch_w:].reshape(-1, 3),
+    ], axis=0)
 
-    corners = np.concatenate(
-        [
-            rgb[
-                :patch_h,
-                :patch_w
-            ].reshape(-1, 3),
-
-            rgb[
-                :patch_h,
-                -patch_w:
-            ].reshape(-1, 3),
-
-            rgb[
-                -patch_h:,
-                :patch_w
-            ].reshape(-1, 3),
-
-            rgb[
-                -patch_h:,
-                -patch_w:
-            ].reshape(-1, 3)
-        ],
-        axis=0
-    )
-
-    background = np.median(
-        corners,
-        axis=0
-    ).astype(np.int16)
-
-    diff = (
-        rgb.astype(np.int16)
-        -
-        background
-    )
-
-    distance = np.sqrt(
-        np.sum(
-            diff * diff,
-            axis=2
-        )
-    )
-
-    distance = np.clip(
-        distance,
-        0,
-        255
-    ).astype(np.uint8)
+    background = np.median(corners, axis=0).astype(np.int16)
+    diff = rgb.astype(np.int16) - background
+    distance = np.sqrt(np.sum(diff * diff, axis=2))
+    distance = np.clip(distance, 0, 255).astype(np.uint8)
 
     _, binary = cv2.threshold(
-        distance,
-        0,
-        255,
-        cv2.THRESH_BINARY
-        +
-        cv2.THRESH_OTSU
+        distance, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
     )
 
     mask = clean_mask(binary)
-
     if mask is None:
         return None
 
     contour = largest_contour(mask)
-
     if contour is None:
         return None
 
-    ratio = (
-        cv2.contourArea(contour)
-        /
-        float(h * w)
-    )
-
+    ratio = cv2.contourArea(contour) / float(h * w)
     if ratio < 0.07 or ratio > 0.90:
         return None
 
     return mask
 
 
-# =========================================================
-# 切り抜き
-# =========================================================
-def crop_to_mask(
-    rgb,
-    mask
-):
-
-    ys, xs = np.where(
-        mask > 0
-    )
-
+def crop_to_mask(rgb, mask):
+    ys, xs = np.where(mask > 0)
     if len(xs) == 0:
         return rgb, mask
 
-    x1 = int(xs.min())
-    x2 = int(xs.max())
-
-    y1 = int(ys.min())
-    y2 = int(ys.max())
-
-    return (
-        rgb[
-            y1:y2 + 1,
-            x1:x2 + 1
-        ],
-
-        mask[
-            y1:y2 + 1,
-            x1:x2 + 1
-        ]
-    )
+    x1, x2 = int(xs.min()), int(xs.max())
+    y1, y2 = int(ys.min()), int(ys.max())
+    return rgb[y1:y2 + 1, x1:x2 + 1], mask[y1:y2 + 1, x1:x2 + 1]
 
 
-# =========================================================
-# 回転
-# =========================================================
-def rotate_bound(
-    image,
-    angle,
-    interpolation,
-    border_value
-):
-
+def rotate_bound(image, angle, interpolation, border_value):
     h, w = image.shape[:2]
+    center = (w / 2, h / 2)
+    matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
 
-    center = (
-        w / 2,
-        h / 2
-    )
+    cos = abs(matrix[0, 0])
+    sin = abs(matrix[0, 1])
+    new_w = int(h * sin + w * cos)
+    new_h = int(h * cos + w * sin)
 
-    matrix = cv2.getRotationMatrix2D(
-        center,
-        angle,
-        1.0
-    )
-
-    cos = abs(
-        matrix[0, 0]
-    )
-
-    sin = abs(
-        matrix[0, 1]
-    )
-
-    new_w = int(
-        h * sin
-        +
-        w * cos
-    )
-
-    new_h = int(
-        h * cos
-        +
-        w * sin
-    )
-
-    matrix[0, 2] += (
-        new_w / 2
-        -
-        center[0]
-    )
-
-    matrix[1, 2] += (
-        new_h / 2
-        -
-        center[1]
-    )
+    matrix[0, 2] += new_w / 2 - center[0]
+    matrix[1, 2] += new_h / 2 - center[1]
 
     return cv2.warpAffine(
         image,
         matrix,
-        (
-            new_w,
-            new_h
-        ),
+        (new_w, new_h),
         flags=interpolation,
         borderMode=cv2.BORDER_CONSTANT,
         borderValue=border_value
     )
 
 
-# =========================================================
-# 足の傾き補正
-# =========================================================
-def straighten_foot(
-    rgb,
-    mask
-):
-
+def straighten_foot(rgb, mask):
     contour = largest_contour(mask)
-
     if contour is None:
         return rgb, mask
 
     try:
-
-        rect = cv2.minAreaRect(contour)
-
-        _, size, angle = rect
-
+        _, size, angle = cv2.minAreaRect(contour)
         rw, rh = size
+        rotation = angle if rw > rh else angle - 90
 
-        if rw > rh:
-            rotation = angle
-
-        else:
-            rotation = angle - 90
-
-        rgb = rotate_bound(
-            rgb,
-            rotation,
-            cv2.INTER_LINEAR,
-            (
-                255,
-                255,
-                255
-            )
-        )
-
-        mask = rotate_bound(
-            mask,
-            rotation,
-            cv2.INTER_NEAREST,
-            0
-        )
-
+        rgb = rotate_bound(rgb, rotation, cv2.INTER_LINEAR, (255, 255, 255))
+        mask = rotate_bound(mask, rotation, cv2.INTER_NEAREST, 0)
     except cv2.error:
         pass
 
     return rgb, mask
 
 
-# =========================================================
-# 横幅
-# =========================================================
-def width_in_band(
-    mask,
-    start,
-    end
-):
-
+def width_in_band(mask, start, end):
     h, _ = mask.shape
-
-    y1 = int(
-        h * start
-    )
-
-    y2 = int(
-        h * end
-    )
-
+    y1, y2 = int(h * start), int(h * end)
     widths = []
 
-    for y in range(
-        y1,
-        y2
-    ):
-
-        xs = np.where(
-            mask[y] > 0
-        )[0]
-
+    for y in range(y1, y2):
+        xs = np.where(mask[y] > 0)[0]
         if len(xs) > 0:
+            widths.append(xs.max() - xs.min() + 1)
 
-            widths.append(
-                xs.max()
-                -
-                xs.min()
-                +
-                1
-            )
-
-    if not widths:
-        return 0
-
-    return float(
-        np.median(widths)
-    )
+    return float(np.median(widths)) if widths else 0
 
 
-# =========================================================
-# 足指を上方向へ
-# =========================================================
-def ensure_toes_top(
-    rgb,
-    mask
-):
-
-    top = width_in_band(
-        mask,
-        0.03,
-        0.24
-    )
-
-    bottom = width_in_band(
-        mask,
-        0.76,
-        0.97
-    )
+def ensure_toes_top(rgb, mask):
+    top = width_in_band(mask, 0.03, 0.24)
+    bottom = width_in_band(mask, 0.76, 0.97)
 
     if bottom > top:
-
-        rgb = np.rot90(
-            rgb,
-            2
-        ).copy()
-
-        mask = np.rot90(
-            mask,
-            2
-        ).copy()
+        rgb = np.rot90(rgb, 2).copy()
+        mask = np.rot90(mask, 2).copy()
 
     return rgb, mask
 
 
-# =========================================================
-# 輪郭平滑化
-# =========================================================
 def smooth_curve(curve):
-
-    curve = np.asarray(
-        curve,
-        dtype=np.float32
-    )
-
+    curve = np.asarray(curve, dtype=np.float32)
     if len(curve) < 7:
         return curve
 
-    size = max(
-        7,
-        int(
-            len(curve)
-            *
-            0.025
-        )
-    )
-
+    size = max(7, int(len(curve) * 0.025))
     if size % 2 == 0:
         size += 1
 
-    kernel = (
-        np.ones(
-            size,
-            np.float32
-        )
-        /
-        size
-    )
-
-    return np.convolve(
-        curve,
-        kernel,
-        mode="same"
-    )
+    kernel = np.ones(size, np.float32) / size
+    return np.convolve(curve, kernel, mode="same")
 
 
-# =========================================================
-# 足指輪郭
-# =========================================================
 def build_top_curve(mask):
-
     h, w = mask.shape
-
-    toe_bottom = int(
-        h * 0.43
-    )
-
-    curve = np.full(
-        w,
-        np.nan,
-        dtype=np.float32
-    )
+    toe_bottom = int(h * 0.43)
+    curve = np.full(w, np.nan, dtype=np.float32)
 
     for x in range(w):
-
-        ys = np.where(
-            mask[
-                :toe_bottom,
-                x
-            ] > 0
-        )[0]
-
+        ys = np.where(mask[:toe_bottom, x] > 0)[0]
         if len(ys) > 0:
+            curve[x] = float(np.percentile(ys, 3))
 
-            curve[x] = float(
-                np.percentile(
-                    ys,
-                    3
-                )
-            )
-
-    valid = np.where(
-        np.isfinite(curve)
-    )[0]
-
+    valid = np.where(np.isfinite(curve))[0]
     if len(valid) < 30:
         return None
 
-    x1 = int(valid.min())
-    x2 = int(valid.max())
-
-    curve = curve[
-        x1:x2 + 1
-    ]
-
+    x1, x2 = int(valid.min()), int(valid.max())
+    curve = curve[x1:x2 + 1]
     missing = ~np.isfinite(curve)
-
-    known = np.where(
-        ~missing
-    )[0]
+    known = np.where(~missing)[0]
 
     if len(known) < 5:
         return None
 
-    curve[missing] = np.interp(
-        np.where(missing)[0],
-        known,
-        curve[known]
-    )
-
+    curve[missing] = np.interp(np.where(missing)[0], known, curve[known])
     return smooth_curve(curve)
 
 
-# =========================================================
-# 親指・人差し指・中指
-# =========================================================
-def detect_three_toes(
-    mask,
-    big_toe_side
-):
-
+def detect_three_toes(mask, big_toe_side):
     curve = build_top_curve(mask)
-
     if curve is None:
         return None
 
     h, _ = mask.shape
-
     n = len(curve)
 
     if big_toe_side == "right":
@@ -1072,761 +717,233 @@ def detect_three_toes(
     windows = [
         (0.02, 0.25),
         (0.18, 0.43),
-        (0.35, 0.60)
+        (0.35, 0.60),
     ]
 
     values = []
-
     for start, end in windows:
-
-        sx = int(
-            n * start
-        )
-
-        ex = int(
-            n * end
-        )
-
+        sx, ex = int(n * start), int(n * end)
         if ex <= sx:
             return None
-
-        part = curve[
-            sx:ex
-        ]
-
+        part = curve[sx:ex]
         if len(part) < 3:
             return None
+        values.append(float(np.min(part)))
 
-        values.append(
-            float(
-                np.min(part)
-            )
-        )
-
-    return (
-        values[0],
-        values[1],
-        values[2],
-        float(h)
-    )
+    return values[0], values[1], values[2], float(h)
 
 
-# =========================================================
-# 足型判定
-# =========================================================
-def classify_foot_shape(
-    rgb,
-    mask,
-    big_toe_side
-):
-
+def classify_foot_shape(rgb, mask, big_toe_side):
     if mask is None:
+        return "判定困難", 0.0
 
-        return (
-            "判定困難",
-            0.0
-        )
-
-    rgb, mask = crop_to_mask(
-        rgb,
-        mask
-    )
-
-    rgb, mask = straighten_foot(
-        rgb,
-        mask
-    )
-
-    rgb, mask = crop_to_mask(
-        rgb,
-        mask
-    )
-
-    rgb, mask = ensure_toes_top(
-        rgb,
-        mask
-    )
-
-    rgb, mask = crop_to_mask(
-        rgb,
-        mask
-    )
+    rgb, mask = crop_to_mask(rgb, mask)
+    rgb, mask = straighten_foot(rgb, mask)
+    rgb, mask = crop_to_mask(rgb, mask)
+    rgb, mask = ensure_toes_top(rgb, mask)
+    rgb, mask = crop_to_mask(rgb, mask)
 
     h, w = mask.shape
-
     if h < 75 or w < 38:
+        return "判定困難", 0.0
 
-        return (
-            "判定困難",
-            0.0
-        )
-
-    result = detect_three_toes(
-        mask,
-        big_toe_side
-    )
-
+    result = detect_three_toes(mask, big_toe_side)
     if result is None:
-
-        return (
-            "判定困難",
-            0.0
-        )
+        return "判定困難", 0.0
 
     big, second, third, foot_length = result
 
-
-    # スクエア型
-    spread = (
-        max(
-            big,
-            second,
-            third
-        )
-        -
-        min(
-            big,
-            second,
-            third
-        )
-    ) / foot_length
-
-
+    spread = (max(big, second, third) - min(big, second, third)) / foot_length
     if spread <= 0.010:
+        return "スクエア型", 0.90
 
-        return (
-            "スクエア型",
-            0.90
-        )
-
-
-    # ギリシャ型
-    # 人差し指が明確に長い場合だけ
-    greek_difference = (
-        big
-        -
-        second
-    ) / foot_length
-
-
+    greek_difference = (big - second) / foot_length
     if greek_difference > 0.035:
+        confidence = min(0.97, 0.84 + greek_difference * 3.5)
+        return "ギリシャ型", confidence
 
-        confidence = min(
-            0.97,
-            0.84
-            +
-            greek_difference
-            *
-            3.5
-        )
-
-        return (
-            "ギリシャ型",
-            confidence
-        )
+    return "エジプト型", 0.92
 
 
-    return (
-        "エジプト型",
-        0.92
-    )
-
-
-# =========================================================
-# 足の色
-# =========================================================
-def analyze_color(
-    rgb,
-    mask
-):
-
+def analyze_color(rgb, mask):
     if mask is None:
+        return "判定困難", {}
 
-        return (
-            "判定困難",
-            {}
-        )
+    hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
+    lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB)
 
-    hsv = cv2.cvtColor(
-        rgb,
-        cv2.COLOR_RGB2HSV
-    )
-
-    lab = cv2.cvtColor(
-        rgb,
-        cv2.COLOR_RGB2LAB
-    )
-
-    valid = (
-        mask > 0
-    )
-
-    brightness = hsv[
-        :,
-        :,
-        2
-    ]
-
-    valid &= (
-        brightness > 45
-    )
-
-    valid &= (
-        brightness < 248
-    )
+    valid = mask > 0
+    brightness = hsv[:, :, 2]
+    valid &= brightness > 45
+    valid &= brightness < 248
 
     if valid.sum() < 100:
         valid = mask > 0
 
-    H = float(
-        np.median(
-            hsv[
-                :,
-                :,
-                0
-            ][valid]
-        )
-    )
-
-    S = float(
-        np.median(
-            hsv[
-                :,
-                :,
-                1
-            ][valid]
-        )
-    )
-
-    V = float(
-        np.median(
-            hsv[
-                :,
-                :,
-                2
-            ][valid]
-        )
-    )
-
-    A = float(
-        np.median(
-            lab[
-                :,
-                :,
-                1
-            ][valid]
-        )
-    )
-
-    B = float(
-        np.median(
-            lab[
-                :,
-                :,
-                2
-            ][valid]
-        )
-    )
-
+    H = float(np.median(hsv[:, :, 0][valid]))
+    S = float(np.median(hsv[:, :, 1][valid]))
+    V = float(np.median(hsv[:, :, 2][valid]))
+    A = float(np.median(lab[:, :, 1][valid]))
+    B = float(np.median(lab[:, :, 2][valid]))
 
     if S < 35 and V > 185:
-
         result = "白っぽい"
-
-    elif (
-        (H <= 5 or H >= 176)
-        and
-        S >= 55
-        and
-        A >= 135
-    ):
-
+    elif (H <= 5 or H >= 176) and S >= 55 and A >= 135:
         result = "赤み強め"
-
-    elif (
-        5 < H <= 17
-        and
-        S >= 45
-    ):
-
+    elif 5 < H <= 17 and S >= 45:
         result = "オレンジ寄り"
-
-    elif (
-        17 < H <= 32
-        and
-        S >= 45
-        and
-        B >= 135
-    ):
-
+    elif 17 < H <= 32 and S >= 45 and B >= 135:
         result = "黄み強め"
-
     else:
-
         result = "標準的な色味"
 
-
-    return (
-        result,
-        {
-            "H": H,
-            "S": S,
-            "V": V
-        }
-    )
+    return result, {"H": H, "S": S, "V": V}
 
 
-# =========================================================
-# 乾燥・硬い部分
-# =========================================================
-def analyze_texture(
-    rgb,
-    mask
-):
-
+def analyze_texture(rgb, mask):
     if mask is None:
+        return "判定困難", "判定困難"
 
-        return (
-            "判定困難",
-            "判定困難"
-        )
-
-    gray = cv2.cvtColor(
-        rgb,
-        cv2.COLOR_RGB2GRAY
-    )
-
-    lap = cv2.Laplacian(
-        gray,
-        cv2.CV_32F
-    )
-
-    texture = np.abs(lap)[
-        mask > 0
-    ]
-
-    if texture.size > 0:
-
-        texture_score = float(
-            np.percentile(
-                texture,
-                75
-            )
-        )
-
-    else:
-
-        texture_score = 0
-
+    gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+    lap = cv2.Laplacian(gray, cv2.CV_32F)
+    texture = np.abs(lap)[mask > 0]
+    texture_score = float(np.percentile(texture, 75)) if texture.size > 0 else 0
 
     if texture_score > 28:
-
         dryness = "乾燥が目立つ"
-
     elif texture_score > 18:
-
         dryness = "やや乾燥"
-
     else:
-
         dryness = "乾燥は目立たない"
 
-
-    lab = cv2.cvtColor(
-        rgb,
-        cv2.COLOR_RGB2LAB
-    )
-
-    candidates = (
-        (mask > 0)
-        &
-        (
-            lab[
-                :,
-                :,
-                0
-            ]
-            >
-            145
-        )
-        &
-        (
-            lab[
-                :,
-                :,
-                2
-            ]
-            >
-            138
-        )
-    )
-
+    lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB)
+    candidates = (mask > 0) & (lab[:, :, 0] > 145) & (lab[:, :, 2] > 138)
     ys, xs = np.where(candidates)
 
     if len(xs) < 80:
+        return dryness, "なし"
 
-        return (
-            dryness,
-            "なし"
-        )
-
-    all_y, all_x = np.where(
-        mask > 0
-    )
-
+    all_y, all_x = np.where(mask > 0)
     if len(all_x) == 0:
+        return dryness, "なし"
 
-        return (
-            dryness,
-            "なし"
-        )
+    x1, x2 = all_x.min(), all_x.max()
+    y1, y2 = all_y.min(), all_y.max()
+    cx, cy = float(xs.mean()), float(ys.mean())
 
-    x1 = all_x.min()
-    x2 = all_x.max()
-
-    y1 = all_y.min()
-    y2 = all_y.max()
-
-    cx = float(xs.mean())
-    cy = float(ys.mean())
-
-    nx = (
-        cx - x1
-    ) / max(
-        1,
-        x2 - x1
-    )
-
-    ny = (
-        cy - y1
-    ) / max(
-        1,
-        y2 - y1
-    )
+    nx = (cx - x1) / max(1, x2 - x1)
+    ny = (cy - y1) / max(1, y2 - y1)
 
     if ny > 0.72:
-
         hard_part = "かかと"
-
     elif ny < 0.45:
-
         hard_part = "足の前側"
-
     elif nx < 0.35:
-
         hard_part = "足裏の左側"
-
     elif nx > 0.65:
-
         hard_part = "足裏の右側"
-
     else:
-
         hard_part = "足裏の中央"
 
-    return (
-        dryness,
-        hard_part
-    )
+    return dryness, hard_part
 
 
-# =========================================================
-# 両足写真
-# =========================================================
 def split_both(rgb):
-
     _, w = rgb.shape[:2]
-
     center = w // 2
-
-    overlap = int(
-        w * 0.02
-    )
-
-    left = rgb[
-        :,
-        :min(
-            w,
-            center + overlap
-        )
-    ].copy()
-
-    right = rgb[
-        :,
-        max(
-            0,
-            center - overlap
-        ):
-    ].copy()
-
+    overlap = int(w * 0.02)
+    left = rgb[:, :min(w, center + overlap)].copy()
+    right = rgb[:, max(0, center - overlap):].copy()
     return left, right
 
 
-# =========================================================
-# 足型統合
-# =========================================================
 def unify_shapes(results):
-
-    usable = [
-        result
-        for result
-        in results
-        if result[0] != "判定困難"
-    ]
-
+    usable = [r for r in results if r[0] != "判定困難"]
     if not usable:
+        return "判定困難", 0
 
-        return (
-            "判定困難",
-            0
-        )
-
-    counts = {
-        "エジプト型": 0,
-        "ギリシャ型": 0,
-        "スクエア型": 0
-    }
-
-    scores = {
-        "エジプト型": 0,
-        "ギリシャ型": 0,
-        "スクエア型": 0
-    }
+    counts = {"エジプト型": 0, "ギリシャ型": 0, "スクエア型": 0}
+    scores = {"エジプト型": 0, "ギリシャ型": 0, "スクエア型": 0}
 
     for shape, conf in usable:
-
         counts[shape] += 1
         scores[shape] += conf
 
-    max_count = max(
-        counts.values()
-    )
-
-    winners = [
-        shape
-        for shape, count
-        in counts.items()
-        if count == max_count
-        and count > 0
-    ]
+    max_count = max(counts.values())
+    winners = [s for s, c in counts.items() if c == max_count and c > 0]
 
     if len(winners) == 1:
-
         chosen = winners[0]
+        return chosen, scores[chosen] / counts[chosen]
 
-        return (
-            chosen,
-            scores[chosen]
-            /
-            counts[chosen]
-        )
-
-
-    # エジプトとギリシャで割れた時は
-    # ギリシャがかなり強い時だけギリシャ
-    if (
-        scores["ギリシャ型"]
-        >
-        scores["エジプト型"]
-        *
-        1.35
-    ):
-
-        return (
-            "ギリシャ型",
-            scores["ギリシャ型"]
-        )
-
+    if scores["ギリシャ型"] > scores["エジプト型"] * 1.35:
+        return "ギリシャ型", scores["ギリシャ型"]
 
     if scores["エジプト型"] > 0:
+        return "エジプト型", scores["エジプト型"]
 
-        return (
-            "エジプト型",
-            scores["エジプト型"]
-        )
-
-
-    chosen = max(
-        scores,
-        key=scores.get
-    )
-
-    return (
-        chosen,
-        scores[chosen]
-    )
+    chosen = max(scores, key=scores.get)
+    return chosen, scores[chosen]
 
 
-# =========================================================
-# 全解析
-# =========================================================
-def analyze_images(
-    both_rgb=None,
-    right_rgb=None,
-    left_rgb=None
-):
-
+def analyze_images(both_rgb=None, right_rgb=None, left_rgb=None):
     shape_results = []
-
     representative_rgb = None
     representative_mask = None
 
-
-    # 右足
     if right_rgb is not None:
-
         mask = segment_foot(right_rgb)
-
-        result = classify_foot_shape(
-            right_rgb,
-            mask,
-            "left"
-        )
-
+        result = classify_foot_shape(right_rgb, mask, "left")
         if result[0] != "判定困難":
-
-            shape_results.append(
-                (
-                    result[0],
-                    min(
-                        0.99,
-                        result[1] + 0.05
-                    )
-                )
-            )
-
+            shape_results.append((result[0], min(0.99, result[1] + 0.05)))
         if representative_rgb is None:
-
             representative_rgb = right_rgb
             representative_mask = mask
 
-
-    # 左足
     if left_rgb is not None:
-
         mask = segment_foot(left_rgb)
-
-        result = classify_foot_shape(
-            left_rgb,
-            mask,
-            "right"
-        )
-
+        result = classify_foot_shape(left_rgb, mask, "right")
         if result[0] != "判定困難":
-
-            shape_results.append(
-                (
-                    result[0],
-                    min(
-                        0.99,
-                        result[1] + 0.05
-                    )
-                )
-            )
-
+            shape_results.append((result[0], min(0.99, result[1] + 0.05)))
         if representative_rgb is None:
-
             representative_rgb = left_rgb
             representative_mask = mask
 
-
-    # 両足
     if both_rgb is not None:
+        left_part, right_part = split_both(both_rgb)
+        left_mask = segment_foot(left_part)
+        right_mask = segment_foot(right_part)
 
-        left_part, right_part = split_both(
-            both_rgb
-        )
-
-        left_mask = segment_foot(
-            left_part
-        )
-
-        right_mask = segment_foot(
-            right_part
-        )
-
-        left_result = classify_foot_shape(
-            left_part,
-            left_mask,
-            "right"
-        )
-
-        right_result = classify_foot_shape(
-            right_part,
-            right_mask,
-            "left"
-        )
-
-        both_result = unify_shapes(
-            [
-                left_result,
-                right_result
-            ]
-        )
+        left_result = classify_foot_shape(left_part, left_mask, "right")
+        right_result = classify_foot_shape(right_part, right_mask, "left")
+        both_result = unify_shapes([left_result, right_result])
 
         if both_result[0] != "判定困難":
-
-            shape_results.append(
-                both_result
-            )
-
+            shape_results.append(both_result)
 
         if representative_rgb is None:
-
-            left_area = (
-                np.count_nonzero(left_mask)
-                if left_mask is not None
-                else 0
-            )
-
-            right_area = (
-                np.count_nonzero(right_mask)
-                if right_mask is not None
-                else 0
-            )
+            left_area = np.count_nonzero(left_mask) if left_mask is not None else 0
+            right_area = np.count_nonzero(right_mask) if right_mask is not None else 0
 
             if right_area >= left_area:
-
                 representative_rgb = right_part
                 representative_mask = right_mask
-
             else:
-
                 representative_rgb = left_part
                 representative_mask = left_mask
 
+    overall_shape, shape_conf = unify_shapes(shape_results)
 
-    overall_shape, shape_conf = unify_shapes(
-        shape_results
-    )
-
-
-    if (
-        representative_rgb is None
-        or
-        representative_mask is None
-    ):
-
+    if representative_rgb is None or representative_mask is None:
         foot_color = "判定困難"
         color_info = {}
         dryness = "判定困難"
         hard_part = "判定困難"
-
     else:
-
-        foot_color, color_info = analyze_color(
-            representative_rgb,
-            representative_mask
-        )
-
-        dryness, hard_part = analyze_texture(
-            representative_rgb,
-            representative_mask
-        )
-
+        foot_color, color_info = analyze_color(representative_rgb, representative_mask)
+        dryness, hard_part = analyze_texture(representative_rgb, representative_mask)
 
     gc.collect()
-
 
     return {
         "overall_shape": overall_shape,
@@ -1834,312 +951,88 @@ def analyze_images(
         "foot_color": foot_color,
         "color_info": color_info,
         "dryness": dryness,
-        "hard_part": hard_part
+        "hard_part": hard_part,
     }
-
-
-# =========================================================
-# 結果カード
-# =========================================================
-def result_card(
-    title,
-    body,
-    card_class,
-    extra_class=""
-):
-
-    st.markdown(
-        f"### {title}"
-    )
-
-    st.markdown(
-        f"""
-<div class="result-card {card_class} {extra_class}">
-{body}
-</div>
-""",
-        unsafe_allow_html=True
-    )
 
 
 # =========================================================
 # STEP1
 # =========================================================
 if st.session_state.step == 1:
+    st.markdown('<div class="step-box">STEP 1　簡単な質問</div>', unsafe_allow_html=True)
 
-    st.markdown(
-        """
-<div class="step-box">
-STEP 1　簡単な質問
-</div>
-""",
-        unsafe_allow_html=True
-    )
+    cold = st.radio("Q1. 足が冷えやすいですか？", ["はい", "いいえ"], horizontal=True)
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
+    swelling = st.radio("Q2. むくみを感じることがありますか？", ["はい", "いいえ"], horizontal=True)
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    cold = st.radio(
-        "Q1. 足が冷えやすいですか？",
-        [
-            "はい",
-            "いいえ"
-        ],
-        horizontal=True
-    )
+    tired = st.radio("Q3. 長時間歩いたり立ったりすると、足が疲れやすいですか？", ["はい", "いいえ"], horizontal=True)
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
+    standing = st.radio("Q4. 普段、立っている時間は長いですか？", ["はい", "いいえ"], horizontal=True)
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-
-    swelling = st.radio(
-        "Q2. むくみを感じることがありますか？",
-        [
-            "はい",
-            "いいえ"
-        ],
-        horizontal=True
-    )
-
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
-
-
-    tired = st.radio(
-        "Q3. 長時間歩いたり立ったりすると、足が疲れやすいですか？",
-        [
-            "はい",
-            "いいえ"
-        ],
-        horizontal=True
-    )
-
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
-
-
-    standing = st.radio(
-        "Q4. 普段、立っている時間は長いですか？",
-        [
-            "はい",
-            "いいえ"
-        ],
-        horizontal=True
-    )
-
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
-
-
-    shoes = st.selectbox(
-        "Q5. 普段よく履く靴は？",
-        [
-            "スニーカー",
-            "革靴",
-            "パンプス",
-            "サンダル",
-            "ブーツ",
-            "その他"
-        ]
-    )
-
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
-
+    shoes = st.selectbox("Q5. 普段よく履く靴は？", ["スニーカー", "革靴", "パンプス", "サンダル", "ブーツ", "その他"])
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
     foot_concern = st.selectbox(
         "Q6. 足で一番気になることは？",
-        [
-            "特にない",
-            "疲れやすい",
-            "冷え",
-            "むくみ",
-            "乾燥",
-            "硬くなった部分",
-            "靴が合いにくい",
-            "歩き方が気になる"
-        ]
+        ["特にない", "疲れやすい", "冷え", "むくみ", "乾燥", "硬くなった部分", "靴が合いにくい", "歩き方が気になる"]
     )
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
-
-
-    # Q7
-    st.write(
-        "Q7. 今、疲れを感じる場所はありますか？"
-    )
-
+    st.write("Q7. 今、疲れを感じる場所はありますか？")
     fatigue_area = []
 
-
-    with st.container(
-        key="fatigue_grid"
-    ):
-
+    with st.container(key="fatigue_grid"):
         row1 = st.columns(2)
-
         with row1[0]:
-
-            if st.checkbox(
-                "頭・目",
-                key="fatigue_head"
-            ):
-                fatigue_area.append(
-                    "頭・目"
-                )
-
+            if st.checkbox("頭・目", key="fatigue_head"):
+                fatigue_area.append("頭・目")
         with row1[1]:
-
-            if st.checkbox(
-                "首",
-                key="fatigue_neck"
-            ):
-                fatigue_area.append(
-                    "首"
-                )
-
+            if st.checkbox("首", key="fatigue_neck"):
+                fatigue_area.append("首")
 
         row2 = st.columns(2)
-
         with row2[0]:
-
-            if st.checkbox(
-                "肩",
-                key="fatigue_shoulder"
-            ):
-                fatigue_area.append(
-                    "肩"
-                )
-
+            if st.checkbox("肩", key="fatigue_shoulder"):
+                fatigue_area.append("肩")
         with row2[1]:
-
-            if st.checkbox(
-                "背中",
-                key="fatigue_back"
-            ):
-                fatigue_area.append(
-                    "背中"
-                )
-
+            if st.checkbox("背中", key="fatigue_back"):
+                fatigue_area.append("背中")
 
         row3 = st.columns(2)
-
         with row3[0]:
-
-            if st.checkbox(
-                "腰",
-                key="fatigue_waist"
-            ):
-                fatigue_area.append(
-                    "腰"
-                )
-
+            if st.checkbox("腰", key="fatigue_waist"):
+                fatigue_area.append("腰")
         with row3[1]:
-
-            if st.checkbox(
-                "胃まわり",
-                key="fatigue_stomach"
-            ):
-                fatigue_area.append(
-                    "胃まわり"
-                )
-
+            if st.checkbox("胃まわり", key="fatigue_stomach"):
+                fatigue_area.append("胃まわり")
 
         row4 = st.columns(2)
-
         with row4[0]:
-
-            if st.checkbox(
-                "脚",
-                key="fatigue_leg"
-            ):
-                fatigue_area.append(
-                    "脚"
-                )
-
+            if st.checkbox("脚", key="fatigue_leg"):
+                fatigue_area.append("脚")
         with row4[1]:
+            if st.checkbox("全身", key="fatigue_all"):
+                fatigue_area.append("全身")
 
-            if st.checkbox(
-                "全身",
-                key="fatigue_all"
-            ):
-                fatigue_area.append(
-                    "全身"
-                )
-
-
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
-
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
     sole_wear = st.selectbox(
         "Q8. 靴底はどこが減りやすいですか？",
-        [
-            "分からない",
-            "かかとの外側",
-            "かかとの内側",
-            "つま先側",
-            "全体的に均等"
-        ]
+        ["分からない", "かかとの外側", "かかとの内側", "つま先側", "全体的に均等"]
     )
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
+    stumble = st.radio("Q9. 歩いている時につまずきやすいですか？", ["はい", "いいえ"], horizontal=True)
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
+    aroma_goal = st.selectbox("Q10. 今、一番求めているものは？", ["リラックス", "リフレッシュ", "集中", "睡眠", "気分転換"])
+    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    stumble = st.radio(
-        "Q9. 歩いている時につまずきやすいですか？",
-        [
-            "はい",
-            "いいえ"
-        ],
-        horizontal=True
-    )
-
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
-
-
-    aroma_goal = st.selectbox(
-        "Q10. 今、一番求めているものは？",
-        [
-            "リラックス",
-            "リフレッシュ",
-            "集中",
-            "睡眠",
-            "気分転換"
-        ]
-    )
-
-    st.markdown(
-        '<div class="question-space"></div>',
-        unsafe_allow_html=True
-    )
-
-
-    if st.button(
-        "次へ",
-        type="primary",
-        use_container_width=True
-    ):
-
+    if st.button("次へ", type="primary", use_container_width=True):
         st.session_state.cold = cold
         st.session_state.swelling = swelling
         st.session_state.tired = tired
@@ -2150,9 +1043,7 @@ STEP 1　簡単な質問
         st.session_state.sole_wear = sole_wear
         st.session_state.stumble = stumble
         st.session_state.aroma_goal = aroma_goal
-
         st.session_state.step = 2
-
         st.rerun()
 
 
@@ -2160,83 +1051,27 @@ STEP 1　簡単な質問
 # STEP2
 # =========================================================
 elif st.session_state.step == 2:
-
-    st.markdown(
-        """
-<div class="step-box">
-STEP 2　足裏写真
-</div>
-""",
-        unsafe_allow_html=True
-    )
-
+    st.markdown('<div class="step-box">STEP 2　足裏写真</div>', unsafe_allow_html=True)
 
     st.markdown(
         """
 <div class="guide-card">
-
 下のいずれか1枚以上をアップロードしてください。
-
-<div class="guide-list">
-・両足<br>
-・右足<br>
-・左足
-</div>
-
-<span class="guide-note">
-※より正確な判定には、3種類すべての撮影がおすすめです。
-</span>
-
+<div class="guide-list">・両足<br>・右足<br>・左足</div>
+<span class="guide-note">※より正確な判定には、3種類すべての撮影がおすすめです。</span>
 </div>
 """,
         unsafe_allow_html=True
     )
 
+    both_feet = st.file_uploader("両足の写真（任意）", type=["jpg", "jpeg", "png"], key="both_feet")
+    show_upload_status(both_feet)
 
-    both_feet = st.file_uploader(
-        "両足の写真（任意）",
-        type=[
-            "jpg",
-            "jpeg",
-            "png"
-        ],
-        key="both_feet"
-    )
+    right_foot = st.file_uploader("右足の写真（任意）", type=["jpg", "jpeg", "png"], key="right_foot")
+    show_upload_status(right_foot)
 
-    show_upload_status(
-        both_feet
-    )
-
-
-    right_foot = st.file_uploader(
-        "右足の写真（任意）",
-        type=[
-            "jpg",
-            "jpeg",
-            "png"
-        ],
-        key="right_foot"
-    )
-
-    show_upload_status(
-        right_foot
-    )
-
-
-    left_foot = st.file_uploader(
-        "左足の写真（任意）",
-        type=[
-            "jpg",
-            "jpeg",
-            "png"
-        ],
-        key="left_foot"
-    )
-
-    show_upload_status(
-        left_foot
-    )
-
+    left_foot = st.file_uploader("左足の写真（任意）", type=["jpg", "jpeg", "png"], key="left_foot")
+    show_upload_status(left_foot)
 
     st.markdown(
         """
@@ -2247,35 +1082,17 @@ STEP 2　足裏写真
         unsafe_allow_html=True
     )
 
+    has_photo = both_feet is not None or right_foot is not None or left_foot is not None
 
-    has_photo = (
-        both_feet is not None
-        or
-        right_foot is not None
-        or
-        left_foot is not None
-    )
-
-
-    with st.container(
-        key="action_buttons"
-    ):
-
+    with st.container(key="action_buttons"):
         col1, col2 = st.columns(2)
 
         with col1:
-
-            if st.button(
-                "戻る",
-                use_container_width=True
-            ):
-
+            if st.button("戻る", use_container_width=True):
                 st.session_state.step = 1
                 st.rerun()
 
-
         with col2:
-
             diagnose = st.button(
                 "診断する",
                 type="primary",
@@ -2283,51 +1100,23 @@ STEP 2　足裏写真
                 use_container_width=True
             )
 
-
     if diagnose:
-
         progress = st.progress(0)
         status = st.empty()
 
         try:
+            status.write("写真を読み込んでいます...")
 
-            status.write(
-                "写真を読み込んでいます..."
-            )
-
-            both_rgb = (
-                uploaded_to_rgb(
-                    both_feet
-                )
-                if both_feet is not None
-                else None
-            )
-
+            both_rgb = uploaded_to_rgb(both_feet) if both_feet is not None else None
             progress.progress(25)
 
-            right_rgb = (
-                uploaded_to_rgb(
-                    right_foot
-                )
-                if right_foot is not None
-                else None
-            )
-
+            right_rgb = uploaded_to_rgb(right_foot) if right_foot is not None else None
             progress.progress(40)
 
-            left_rgb = (
-                uploaded_to_rgb(
-                    left_foot
-                )
-                if left_foot is not None
-                else None
-            )
-
+            left_rgb = uploaded_to_rgb(left_foot) if left_foot is not None else None
             progress.progress(55)
 
-            status.write(
-                "足裏を確認しています..."
-            )
+            status.write("足裏を確認しています...")
 
             analysis = analyze_images(
                 both_rgb=both_rgb,
@@ -2336,41 +1125,27 @@ STEP 2　足裏写真
             )
 
             progress.progress(90)
-
             st.session_state.analysis = analysis
 
             del both_rgb
             del right_rgb
             del left_rgb
-
             gc.collect()
 
             progress.progress(100)
-
             st.session_state.step = 3
-
             st.rerun()
 
-
         except Exception as error:
-
             gc.collect()
-
-            st.error(
-                "写真をうまく解析できませんでした。"
-                "別の写真でお試しください。"
-            )
-
-            st.caption(
-                str(error)
-            )
+            st.error("写真をうまく解析できませんでした。別の写真でお試しください。")
+            st.caption(str(error))
 
 
 # =========================================================
 # STEP3
 # =========================================================
 elif st.session_state.step == 3:
-
     analysis = st.session_state.analysis
 
     cold = st.session_state.cold
@@ -2382,467 +1157,273 @@ elif st.session_state.step == 3:
     stumble = st.session_state.stumble
     aroma_goal = st.session_state.aroma_goal
 
-    shape = analysis[
-        "overall_shape"
-    ]
+    shape = analysis["overall_shape"]
+    color = analysis["foot_color"]
 
-    color = analysis[
-        "foot_color"
-    ]
-
-
-    # =====================================================
-    # スコア
-    # =====================================================
+    # -----------------------------------------------------
+    # 総合スコア
+    # -----------------------------------------------------
     score = 100
 
     if cold == "はい":
         score -= 8
-
     if swelling == "はい":
         score -= 8
-
     if tired == "はい":
         score -= 10
-
     if standing == "はい":
         score -= 4
-
     if stumble == "はい":
         score -= 6
 
     if len(fatigue_area) == 1:
         score -= 4
-
     elif len(fatigue_area) >= 2:
         score -= 8
 
     if analysis["dryness"] == "やや乾燥":
         score -= 5
-
     elif analysis["dryness"] == "乾燥が目立つ":
         score -= 10
 
-    if analysis["hard_part"] not in [
-        "なし",
-        "判定困難"
-    ]:
+    if analysis["hard_part"] not in ["なし", "判定困難"]:
         score -= 5
 
     if color == "赤み強め":
         score -= 5
-
     elif color == "オレンジ寄り":
         score -= 3
-
     elif color == "白っぽい":
         score -= 4
 
-
-    score = max(
-        40,
-        min(
-            100,
-            score
-        )
-    )
-
+    score = max(40, min(100, score))
 
     if score >= 85:
-
-        score_message = (
-            "今は比較的良い状態です"
-        )
-
+        score_message = "今は比較的良い状態です"
     elif score >= 70:
-
-        score_message = (
-            "大きな偏りは少ない状態です"
-        )
-
+        score_message = "大きな偏りは少ない状態です"
     elif score >= 55:
-
-        score_message = (
-            "少しセルフケアを意識したい状態です"
-        )
-
+        score_message = "少しセルフケアを意識したい状態です"
     else:
-
-        score_message = (
-            "今日はゆっくり休むことを意識しましょう"
-        )
-
+        score_message = "今日はゆっくり休むことを意識しましょう"
 
     st.markdown(
         f"""
 <div class="step-box">
-
 診断結果：{score}点
-
-<div style="
-font-family:'Yu Gothic',sans-serif;
-font-size:13px;
-font-weight:500;
-margin-top:5px;
-opacity:0.72;
-">
+<div style="font-family:'Yu Gothic',sans-serif;font-size:13px;font-weight:500;margin-top:5px;opacity:0.72;">
 {score_message}
 </div>
-
-<div class="score-note">
-※質問と写真から算出した参考スコアです。
-</div>
-
+<div class="score-note">※質問と写真から算出した参考スコアです。</div>
 </div>
 """,
         unsafe_allow_html=True
     )
 
+    # -----------------------------------------------------
+    # 6角形レーダーチャート
+    # -----------------------------------------------------
+    circulation = 100
+    if cold == "はい":
+        circulation -= 32
+    if color == "白っぽい":
+        circulation -= 10
 
-    # 1
+    freshness = 100
+    if swelling == "はい":
+        freshness -= 35
+    if standing == "はい":
+        freshness -= 8
+
+    energy = 100
+    if tired == "はい":
+        energy -= 35
+    if standing == "はい":
+        energy -= 12
+
+    walkability = 100
+    if stumble == "はい":
+        walkability -= 30
+    if sole_wear in ["かかとの外側", "かかとの内側", "つま先側"]:
+        walkability -= 12
+
+    sole_condition = 100
+    if analysis["dryness"] == "やや乾燥":
+        sole_condition -= 18
+    elif analysis["dryness"] == "乾燥が目立つ":
+        sole_condition -= 32
+    if analysis["hard_part"] not in ["なし", "判定困難"]:
+        sole_condition -= 15
+    if color in ["赤み強め", "オレンジ寄り", "白っぽい"]:
+        sole_condition -= 8
+
+    rest_balance = 100
+    rest_balance -= min(36, len(fatigue_area) * 8)
+    if tired == "はい":
+        rest_balance -= 12
+
+    radar_values = {
+        "めぐり": clamp(circulation, 35, 100),
+        "すっきり感": clamp(freshness, 35, 100),
+        "足の元気": clamp(energy, 35, 100),
+        "歩きやすさ": clamp(walkability, 35, 100),
+        "足裏状態": clamp(sole_condition, 35, 100),
+        "休息バランス": clamp(rest_balance, 35, 100),
+    }
+
+    st.markdown(radar_svg(radar_values), unsafe_allow_html=True)
+
+    # -----------------------------------------------------
+    # 1 足の形
+    # -----------------------------------------------------
     if shape == "エジプト型":
-
-        shape_text = (
-            "親指が一番長く、小指に向かって"
-            "少しずつ短くなるタイプです。"
-        )
-
+        shape_text = "親指が一番長く、小指に向かって少しずつ短くなるタイプです。"
+        foot_image = ASSET_DIR / "foot_egypt.png"
+        shoe_image = ASSET_DIR / "shoes_egypt.png"
     elif shape == "ギリシャ型":
-
-        shape_text = (
-            "人差し指が親指より"
-            "はっきり長いタイプです。"
-        )
-
+        shape_text = "人差し指が親指よりはっきり長いタイプです。"
+        foot_image = ASSET_DIR / "foot_greek.png"
+        shoe_image = ASSET_DIR / "shoes_greek.png"
     elif shape == "スクエア型":
-
-        shape_text = (
-            "親指・人差し指・中指の長さが"
-            "かなり近いタイプです。"
-        )
-
+        shape_text = "親指・人差し指・中指の長さがかなり近いタイプです。"
+        foot_image = ASSET_DIR / "foot_square.png"
+        shoe_image = ASSET_DIR / "shoes_square.png"
     else:
-
-        shape_text = (
-            "今回の写真では足の形を"
-            "はっきり判定できませんでした。"
-        )
-
+        shape_text = "今回の写真では足の形をはっきり判定できませんでした。"
+        foot_image = None
+        shoe_image = None
 
     result_card(
         "1. 足の形",
-        (
-            f"<span class='result-main'>{shape}</span>"
-            "<br><br>"
-            f"{shape_text}"
-        ),
-        "card-beige"
+        f"<span class='result-main'>{shape}</span><br><br>{shape_text}",
+        "card-beige",
+        image_path=foot_image,
+        image_alt=f"{shape}の参考イラスト"
     )
 
-
-    # 2
+    # -----------------------------------------------------
+    # 2 足の色
+    # -----------------------------------------------------
     if color == "赤み強め":
-
-        color_text = (
-            "写真では赤みがやや強く見えます。"
-            "活動した後や、足が温まっている時にも"
-            "見られる色合いです。"
-        )
-
+        color_text = "写真では赤みがやや強く見えます。活動した後や、足が温まっている時にも見られる色合いです。"
     elif color == "オレンジ寄り":
-
-        color_text = (
-            "写真では少しオレンジ寄りに見えます。"
-            "照明やカメラでも色は変わるため、"
-            "参考として見てください。"
-        )
-
+        color_text = "写真では少しオレンジ寄りに見えます。照明やカメラでも色は変わるため、参考として見てください。"
     elif color == "黄み強め":
-
-        color_text = (
-            "写真では少し黄みが強く見えます。"
-            "照明やカメラでも色は変わります。"
-        )
-
+        color_text = "写真では少し黄みが強く見えます。照明やカメラでも色は変わります。"
     elif color == "白っぽい":
-
-        color_text = (
-            "写真ではやや白っぽく見えます。"
-            "照明や撮影環境でも色は変わります。"
-        )
-
+        color_text = "写真ではやや白っぽく見えます。照明や撮影環境でも色は変わります。"
     elif color == "判定困難":
-
-        color_text = (
-            "今回の写真では色を"
-            "うまく確認できませんでした。"
-        )
-
+        color_text = "今回の写真では色をうまく確認できませんでした。"
     else:
-
-        color_text = (
-            "写真では大きな色の偏りは"
-            "目立ちませんでした。"
-        )
-
+        color_text = "写真では大きな色の偏りは目立ちませんでした。"
 
     result_card(
         "2. 足の色",
-        (
-            f"<span class='result-main'>{color}</span>"
-            "<br><br>"
-            f"{color_text}"
-        ),
+        f"<span class='result-main'>{color}</span><br><br>{color_text}",
         "card-orange"
     )
 
-
-    # 3
+    # -----------------------------------------------------
+    # 3 心と体
+    # -----------------------------------------------------
     rest_score = 0
-
     if cold == "はい":
         rest_score += 2
-
     if swelling == "はい":
         rest_score += 1
-
     if tired == "はい":
         rest_score += 2
-
     if len(fatigue_area) >= 2:
         rest_score += 2
-
     elif len(fatigue_area) == 1:
         rest_score += 1
 
-
     if rest_score >= 6:
-
-        mind_text = (
-            "今は疲れがたまりやすい状態かもしれません。"
-            "休む時間や睡眠を少し意識してみましょう。"
-        )
-
+        mind_text = "今は疲れがたまりやすい状態かもしれません。休む時間や睡眠を少し意識してみましょう。"
     elif rest_score >= 3:
-
-        mind_text = (
-            "少し疲れがたまっている可能性があります。"
-            "短い休憩や気分転換を取り入れるのがおすすめです。"
-        )
-
+        mind_text = "少し疲れがたまっている可能性があります。短い休憩や気分転換を取り入れるのがおすすめです。"
     else:
+        mind_text = "今は比較的バランスが取れているようです。今の状態を保ちながら、無理をしすぎないようにしましょう。"
 
-        mind_text = (
-            "今は比較的バランスが取れているようです。"
-            "今の状態を保ちながら、"
-            "無理をしすぎないようにしましょう。"
-        )
+    result_card("3. 今の心と体の傾向", mind_text, "card-green")
 
-
-    result_card(
-        "3. 今の心と体の傾向",
-        mind_text,
-        "card-green"
-    )
-
-
-    # 4
+    # -----------------------------------------------------
+    # 4 歩き方
+    # -----------------------------------------------------
     walk_points = []
 
-
     if sole_wear == "かかとの外側":
-
-        walk_points.append(
-            "靴底の減り方から、"
-            "足の外側に体重がかかりやすいようです。"
-        )
-
+        walk_points.append("靴底の減り方から、足の外側に体重がかかりやすいようです。")
     elif sole_wear == "かかとの内側":
-
-        walk_points.append(
-            "靴底の減り方から、"
-            "足の内側に体重がかかりやすいようです。"
-        )
-
+        walk_points.append("靴底の減り方から、足の内側に体重がかかりやすいようです。")
     elif sole_wear == "つま先側":
-
-        walk_points.append(
-            "つま先側に負担が集まりやすいようです。"
-        )
-
+        walk_points.append("つま先側に負担が集まりやすいようです。")
     elif sole_wear == "全体的に均等":
+        walk_points.append("靴底の減り方には、大きな偏りは見られないようです。")
 
-        walk_points.append(
-            "靴底の減り方には、"
-            "大きな偏りは見られないようです。"
-        )
-
-
-    hard_part = analysis[
-        "hard_part"
-    ]
-
-
+    hard_part = analysis["hard_part"]
     if hard_part == "足の前側":
-
-        walk_points.append(
-            "写真でも足の前側に"
-            "負担がかかっている可能性があります。"
-        )
-
+        walk_points.append("写真でも足の前側に負担がかかっている可能性があります。")
     elif hard_part == "かかと":
-
-        walk_points.append(
-            "写真では、かかとに"
-            "負担がかかっている可能性があります。"
-        )
-
+        walk_points.append("写真では、かかとに負担がかかっている可能性があります。")
 
     if stumble == "はい":
-
-        walk_points.append(
-            "つまずきやすい場合は、"
-            "歩く時に足先を少し上げることも"
-            "意識してみましょう。"
-        )
-
+        walk_points.append("つまずきやすい場合は、歩く時に足先を少し上げることも意識してみましょう。")
 
     if not walk_points:
+        walk_points.append("今回の結果では、歩き方に大きな偏りは見られませんでした。")
 
-        walk_points.append(
-            "今回の結果では、"
-            "歩き方に大きな偏りは見られませんでした。"
-        )
+    result_card("4. 歩き方の傾向", "<br><br>".join(walk_points), "card-sage")
 
-
-    result_card(
-        "4. 歩き方の傾向",
-        "<br><br>".join(
-            walk_points
-        ),
-        "card-sage"
-    )
-
-
-    # 5
+    # -----------------------------------------------------
+    # 5 おすすめの靴
+    # -----------------------------------------------------
     if shape == "エジプト型":
-
-        shoe_title = (
-            "つま先に丸みのあるスニーカー"
-        )
-
-        shoe_text = (
-            "親指が一番長い足型です。"
-            "親指が靴の先に当たりにくい、"
-            "つま先に少し余裕のある靴がおすすめです。"
-        )
-
+        shoe_title = "つま先に丸みのある靴"
+        shoe_text = "親指が一番長い足型です。親指が靴の先に当たりにくい、つま先に丸みと少し余裕のある靴がおすすめです。"
     elif shape == "ギリシャ型":
-
-        shoe_title = (
-            "つま先に余裕のあるスニーカー"
-        )
-
-        shoe_text = (
-            "人差し指が長めの足型です。"
-            "人差し指が靴の先に当たりにくい、"
-            "少し余裕のある靴がおすすめです。"
-        )
-
+        shoe_title = "つま先に余裕のある靴"
+        shoe_text = "人差し指が長めの足型です。人差し指が靴の先に当たりにくい、つま先にゆとりのある靴がおすすめです。"
     elif shape == "スクエア型":
-
-        shoe_title = (
-            "つま先が広めのスニーカー"
-        )
-
-        shoe_text = (
-            "親指・人差し指・中指の長さが近い足型です。"
-            "指先が窮屈になりにくい、"
-            "つま先が広めの靴がおすすめです。"
-        )
-
+        shoe_title = "つま先が広めの靴"
+        shoe_text = "親指・人差し指・中指の長さが近い足型です。指先が窮屈になりにくい、つま先が広めの靴がおすすめです。"
     else:
-
-        shoe_title = (
-            "つま先に余裕のある靴"
-        )
-
-        shoe_text = (
-            "指先が窮屈にならず、"
-            "足の横幅にも合った靴がおすすめです。"
-        )
-
+        shoe_title = "つま先に余裕のある靴"
+        shoe_text = "指先が窮屈にならず、足の横幅にも合った靴がおすすめです。"
 
     if tired == "はい":
-
-        shoe_text += (
-            "<br><br>"
-            "足が疲れやすい場合は、"
-            "靴底のやわらかさも確認してみましょう。"
-        )
-
+        shoe_text += "<br><br>足が疲れやすい場合は、靴底のやわらかさも確認してみましょう。"
 
     result_card(
         "5. おすすめの靴",
-        (
-            f"<span class='result-main'>{shoe_title}</span>"
-            "<br><br>"
-            f"{shoe_text}"
-        ),
-        "card-cream"
+        f"<span class='result-main'>{shoe_title}</span><br><br>{shoe_text}",
+        "card-cream",
+        image_path=shoe_image,
+        image_alt=f"{shape}に合いやすい男女別の靴イラスト"
     )
 
-
-    # 6
+    # -----------------------------------------------------
+    # 6 性格
+    # -----------------------------------------------------
     if shape == "エジプト型":
-
-        personality = (
-            "足型を使ったエンタメ診断では、"
-            "落ち着いていて、自分のペースを大切にする"
-            "タイプと言われることがあります。"
-        )
-
+        personality = "足型を使ったエンタメ診断では、落ち着いていて、自分のペースを大切にするタイプと言われることがあります。"
     elif shape == "ギリシャ型":
-
-        personality = (
-            "足型を使ったエンタメ診断では、"
-            "好奇心があり、新しいことに挑戦しやすい"
-            "タイプと言われることがあります。"
-        )
-
+        personality = "足型を使ったエンタメ診断では、好奇心があり、新しいことに挑戦しやすいタイプと言われることがあります。"
     elif shape == "スクエア型":
-
-        personality = (
-            "足型を使ったエンタメ診断では、"
-            "安定感があり、物事をコツコツ進める"
-            "タイプと言われることがあります。"
-        )
-
+        personality = "足型を使ったエンタメ診断では、安定感があり、物事をコツコツ進めるタイプと言われることがあります。"
     else:
-
-        personality = (
-            "今回は足型をはっきり判定できなかったため、"
-            "この項目は判定できませんでした。"
-        )
-
+        personality = "今回は足型をはっきり判定できなかったため、この項目は判定できませんでした。"
 
     result_card(
         "6. 足の形から見る性格傾向",
-        (
-            personality
-            +
-            "<br><br>"
-            "<span class='small-note'>"
-            "※性格を科学的に判断するものではありません。"
-            "エンタメとしてお楽しみください。"
-            "</span>"
-        ),
+        personality + "<br><br><span class='small-note'>※性格を科学的に判断するものではありません。エンタメとしてお楽しみください。</span>",
         "card-lavender",
         "compact-card"
     )
 
-
-    # 7
+    # -----------------------------------------------------
+    # 7 足裏ポイント
+    # -----------------------------------------------------
     reflex_map = {
         "頭・目": "親指まわり",
         "首": "親指の付け根",
@@ -2851,220 +1432,114 @@ opacity:0.72;
         "腰": "土踏まずの内側〜かかと寄り",
         "胃まわり": "土踏まずの上側",
         "脚": "かかとまわり",
-        "全身": "足裏全体"
+        "全身": "足裏全体",
     }
 
-
     if fatigue_area:
-
         blocks = []
-
         for area in fatigue_area:
-
             blocks.append(
-                f"<span class='care-title'>{area}</span>"
-                "<br>"
+                f"<span class='care-title'>{area}</span><br>"
                 f"足裏のおすすめポイント：{reflex_map[area]}"
             )
 
         reflex_text = (
             "<br><br>".join(blocks)
-            +
-            "<br><br>"
-            "<span class='small-note'>"
-            "リフレクソロジーでは、これらの場所を"
-            "体の各部位に対応する「反射区」として扱います。"
-            "心地よい強さで5〜10秒ほど"
-            "ゆっくり押してみてください。"
+            + "<br><br><span class='small-note'>"
+            "リフレクソロジーでは、これらの場所を体の各部位に対応する「反射区」として扱います。"
+            "心地よい強さで5〜10秒ほどゆっくり押してみてください。"
             "</span>"
         )
-
     else:
+        reflex_text = "今回は特に疲れている場所が選択されていません。<br><br>足裏全体を気持ちいい程度の強さでゆっくりほぐしてみましょう。"
 
-        reflex_text = (
-            "今回は特に疲れている場所が"
-            "選択されていません。"
-            "<br><br>"
-            "足裏全体を気持ちいい程度の強さで"
-            "ゆっくりほぐしてみましょう。"
-        )
+    result_card("7. 疲れた場所・足裏ポイント", reflex_text, "card-rose")
 
-
-    result_card(
-        "7. 疲れた場所・足裏ポイント",
-        reflex_text,
-        "card-rose"
-    )
-
-
-    # 8
+    # -----------------------------------------------------
+    # 8 アロマ
+    # -----------------------------------------------------
     aroma_map = {
-
         "リラックス": (
             "ラベンダー",
-            "ゆっくり過ごしたい時や、"
-            "落ち着きたい時に取り入れやすい香りです。"
+            "ゆっくり過ごしたい時や、落ち着きたい時に取り入れやすい香りです。",
+            ASSET_DIR / "aroma_lavender.png"
         ),
-
         "リフレッシュ": (
             "レモン",
-            "すっきり気分を切り替えたい時に"
-            "取り入れやすい香りです。"
+            "すっきり気分を切り替えたい時に取り入れやすい香りです。",
+            ASSET_DIR / "aroma_lemon.png"
         ),
-
         "集中": (
             "ローズマリー",
-            "仕事や勉強など、"
-            "集中したい時間に取り入れやすい香りです。"
+            "仕事や勉強など、集中したい時間に取り入れやすい香りです。",
+            ASSET_DIR / "aroma_rosemary.png"
         ),
-
         "睡眠": (
             "ラベンダー",
-            "寝る前など、"
-            "ゆったり過ごしたい時に取り入れやすい香りです。"
+            "寝る前など、ゆったり過ごしたい時に取り入れやすい香りです。",
+            ASSET_DIR / "aroma_lavender.png"
         ),
-
         "気分転換": (
             "スイートオレンジ",
-            "気持ちを切り替えたい時に取り入れやすい、"
-            "やわらかな柑橘系の香りです。"
-        )
+            "気持ちを切り替えたい時に取り入れやすい、やわらかな柑橘系の香りです。",
+            ASSET_DIR / "aroma_orange.png"
+        ),
     }
 
-
-    aroma, aroma_text = aroma_map[
-        aroma_goal
-    ]
-
+    aroma, aroma_text, aroma_image = aroma_map[aroma_goal]
 
     result_card(
         "8. おすすめアロマ",
-        (
-            f"<span class='result-main'>{aroma}</span>"
-            "<br><br>"
-            f"{aroma_text}"
-        ),
-        "card-aroma"
+        f"<span class='result-main'>{aroma}</span><br><br>{aroma_text}",
+        "card-aroma",
+        image_path=aroma_image,
+        image_alt=f"{aroma}の参考イラスト"
     )
 
-
-    # 9
+    # -----------------------------------------------------
+    # 9 セルフケア
+    # -----------------------------------------------------
     care = []
 
-
     if swelling == "はい":
-
-        care.append(
-            "<span class='care-title'>"
-            "むくみが気になる時"
-            "</span>"
-            "<br>"
-            "足首をゆっくり回したり、"
-            "ふくらはぎを軽く動かしてみましょう。"
-        )
-
+        care.append("<span class='care-title'>むくみが気になる時</span><br>足首をゆっくり回したり、ふくらはぎを軽く動かしてみましょう。")
 
     if cold == "はい":
-
-        care.append(
-            "<span class='care-title'>"
-            "冷えが気になる時"
-            "</span>"
-            "<br>"
-            "足湯や靴下などで、"
-            "足元を心地よく温めるのがおすすめです。"
-        )
-
+        care.append("<span class='care-title'>冷えが気になる時</span><br>足湯や靴下などで、足元を心地よく温めるのがおすすめです。")
 
     if tired == "はい":
+        care.append("<span class='care-title'>足が疲れている時</span><br>足を休ませる時間をつくり、軽いストレッチをしてみましょう。")
 
-        care.append(
-            "<span class='care-title'>"
-            "足が疲れている時"
-            "</span>"
-            "<br>"
-            "足を休ませる時間をつくり、"
-            "軽いストレッチをしてみましょう。"
-        )
-
-
-    if analysis[
-        "dryness"
-    ] in [
-        "やや乾燥",
-        "乾燥が目立つ"
-    ]:
-
-        care.append(
-            "<span class='care-title'>"
-            "乾燥が気になる時"
-            "</span>"
-            "<br>"
-            "お風呂上がりなどに"
-            "足裏を保湿するのがおすすめです。"
-        )
-
+    if analysis["dryness"] in ["やや乾燥", "乾燥が目立つ"]:
+        care.append("<span class='care-title'>乾燥が気になる時</span><br>お風呂上がりなどに足裏を保湿するのがおすすめです。")
 
     if stumble == "はい":
-
-        care.append(
-            "<span class='care-title'>"
-            "つまずきやすい時"
-            "</span>"
-            "<br>"
-            "足首を軽く動かし、"
-            "歩く時に足先を少し上げることを"
-            "意識してみましょう。"
-        )
-
+        care.append("<span class='care-title'>つまずきやすい時</span><br>足首を軽く動かし、歩く時に足先を少し上げることを意識してみましょう。")
 
     if not care:
+        care.append("<span class='care-title'>毎日のケア</span><br>足裏の保湿や軽いストレッチを取り入れるのがおすすめです。")
 
-        care.append(
-            "<span class='care-title'>"
-            "毎日のケア"
-            "</span>"
-            "<br>"
-            "足裏の保湿や軽いストレッチを"
-            "取り入れるのがおすすめです。"
-        )
+    result_card("9. セルフケア", "<br><br>".join(care), "card-green", "compact-card")
 
-
-    result_card(
-        "9. セルフケア",
-        "<br><br>".join(care),
-        "card-green",
-        "compact-card"
-    )
-
-
+    # -----------------------------------------------------
     # 免責
+    # -----------------------------------------------------
     st.markdown(
         """
 <div class="disclaimer">
-
 このサービスは医療行為や医学的な診断を行うものではありません。
 写真の色は照明やカメラによって変わることがあります。
 足裏ポイントや性格傾向には、リフレクソロジーやエンタメとしての考え方が含まれます。
-診断点数は質問と写真から算出した参考値です。
+診断点数とレーダーチャートは質問と写真から算出した参考値です。
 強い痛み、しびれ、傷、急な腫れ、大きな色の変化などがある場合は、必要に応じて医療機関へご相談ください。
-
 </div>
 """,
         unsafe_allow_html=True
     )
 
-
-    if st.button(
-        "最初から診断する",
-        use_container_width=True
-    ):
-
+    if st.button("最初から診断する", use_container_width=True):
         if "analysis" in st.session_state:
             del st.session_state["analysis"]
-
         gc.collect()
-
         st.session_state.step = 1
-
         st.rerun()
