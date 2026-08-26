@@ -109,17 +109,17 @@ footer { visibility: hidden; }
     padding-top: 0.05rem;
     padding-bottom: 0.05rem;
 }
-.st-key-fatigue_checkbox_group [data-testid="stHorizontalBlock"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    gap: 0.9rem !important;
+.st-key-fatigue_checkbox_group > div > [data-testid="stVerticalBlock"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    column-gap: 1rem !important;
+    row-gap: 0.05rem !important;
+    width: 100% !important;
 }
 
-.st-key-fatigue_checkbox_group [data-testid="column"] {
-    width: calc(50% - 0.45rem) !important;
+.st-key-fatigue_checkbox_group > div > [data-testid="stVerticalBlock"] > div {
     min-width: 0 !important;
-    flex: 1 1 50% !important;
+    width: 100% !important;
 }
 
 .guide-card {
@@ -480,17 +480,11 @@ div.stButton > button {
     .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
         margin-bottom: -12px;
     }
-    .st-key-fatigue_checkbox_group [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 0.75rem !important;
-    }
-
-    .st-key-fatigue_checkbox_group [data-testid="column"] {
-        width: calc(50% - 0.375rem) !important;
-        min-width: 0 !important;
-        flex: 1 1 50% !important;
+    .st-key-fatigue_checkbox_group > div > [data-testid="stVerticalBlock"] {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        column-gap: 0.7rem !important;
+        row-gap: 0 !important;
+        width: 100% !important;
     }
 
     .guide-card {
@@ -1530,29 +1524,14 @@ if st.session_state.step == 1:
     )
 
     with st.container(key="fatigue_checkbox_group"):
-        row1_col1, row1_col2 = st.columns(2, gap="small")
-        with row1_col1:
-            q7_head_eye = st.checkbox("頭・目", key="q7_head_eye")
-        with row1_col2:
-            q7_neck = st.checkbox("首", key="q7_neck")
-
-        row2_col1, row2_col2 = st.columns(2, gap="small")
-        with row2_col1:
-            q7_shoulder = st.checkbox("肩", key="q7_shoulder")
-        with row2_col2:
-            q7_back = st.checkbox("背中", key="q7_back")
-
-        row3_col1, row3_col2 = st.columns(2, gap="small")
-        with row3_col1:
-            q7_waist = st.checkbox("腰", key="q7_waist")
-        with row3_col2:
-            q7_stomach = st.checkbox("胃まわり", key="q7_stomach")
-
-        row4_col1, row4_col2 = st.columns(2, gap="small")
-        with row4_col1:
-            q7_leg = st.checkbox("脚", key="q7_leg")
-        with row4_col2:
-            q7_whole = st.checkbox("全身", key="q7_whole")
+        q7_head_eye = st.checkbox("頭・目", key="q7_head_eye")
+        q7_neck = st.checkbox("首", key="q7_neck")
+        q7_shoulder = st.checkbox("肩", key="q7_shoulder")
+        q7_back = st.checkbox("背中", key="q7_back")
+        q7_waist = st.checkbox("腰", key="q7_waist")
+        q7_stomach = st.checkbox("胃まわり", key="q7_stomach")
+        q7_leg = st.checkbox("脚", key="q7_leg")
+        q7_whole = st.checkbox("全身", key="q7_whole")
 
     fatigue_area = []
     if q7_head_eye:
