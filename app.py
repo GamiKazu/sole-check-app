@@ -41,7 +41,7 @@ html, body, [class*="css"] {
 }
 
 
-/* Streamlit上部UI */
+/* Streamlit UI */
 #MainMenu {
     visibility: hidden;
 }
@@ -71,7 +71,6 @@ footer {
 /* タイトル */
 .main-title {
     text-align: center;
-
     font-family:
         "Yu Mincho",
         "YuMincho",
@@ -80,26 +79,19 @@ footer {
 
     font-size: 2.5rem;
     font-weight: 600;
-
     letter-spacing: 0.08em;
     line-height: 1.5;
-
     color: #405348;
-
     margin-top: 0.2rem;
     margin-bottom: 0.15rem;
 }
 
 .english-title {
     text-align: center;
-
     color: #9B806E;
-
     font-size: 0.76rem;
     font-weight: 600;
-
     letter-spacing: 0.20em;
-
     margin-bottom: 2.2rem;
 }
 
@@ -107,7 +99,6 @@ footer {
 /* STEP */
 .step-box {
     padding: 15px 20px;
-
     border-radius: 16px;
 
     background:
@@ -118,7 +109,6 @@ footer {
         );
 
     border: 1px solid #D9E4DC;
-
     color: #42564A;
 
     font-family:
@@ -128,25 +118,19 @@ footer {
 
     font-weight: 700;
     font-size: 1.15rem;
-
     margin-bottom: 1.45rem;
 }
 
 .score-note {
-    font-family:
-        "Yu Gothic",
-        sans-serif;
-
+    font-family: "Yu Gothic", sans-serif;
     font-size: 0.64rem;
     font-weight: 400;
-
     color: #849087;
-
     margin-top: 8px;
 }
 
 
-/* 質問余白 */
+/* 質問 */
 .question-space {
     height: 12px;
 }
@@ -155,35 +139,27 @@ footer {
 /* STEP2説明 */
 .guide-card {
     background: #FBF7F0;
-
     border: 1px solid #EADFD2;
-
     border-radius: 17px;
 
     padding: 14px 16px;
-
     margin-top: 3px;
     margin-bottom: 16px;
 
     color: #474747;
-
     font-size: 0.90rem;
-
     line-height: 1.45;
 }
 
 .guide-list {
     margin-top: 10px;
     margin-bottom: 10px;
-
     line-height: 1.55;
 }
 
 .guide-note {
     color: #918881;
-
     font-size: 0.60rem;
-
     line-height: 1.4;
 }
 
@@ -191,84 +167,81 @@ footer {
 /* 撮影補足 */
 .photo-note {
     color: #979797;
-
     font-size: 0.61rem;
-
     line-height: 1.45;
-
     margin-top: 15px;
     margin-bottom: 17px;
 }
 
 
-/* アップロード済み */
+/* =========================================================
+   File Uploader
+   ========================================================= */
+
+/* 200MBなどの補足だけ隠す */
+[data-testid="stFileUploader"] small {
+    display: none !important;
+}
+
+/* ドラッグ＆ドロップ説明を隠す */
+[data-testid="stFileUploaderDropzoneInstructions"] {
+    display: none !important;
+}
+
+/*
+重要：
+以前使っていた
+section > div > div:last-child
+を消すCSSは使わない。
+
+これによりアップロード後の
+ファイル名・削除ボタンがちゃんと残る。
+*/
+
+
+/* アップロード済みファイル表示 */
+[data-testid="stFileUploaderFile"] {
+    background: #EDF5EF !important;
+    border: 1px solid #D8E7DC !important;
+    border-radius: 10px !important;
+    padding: 6px 9px !important;
+}
+
+
+/* アップロード済み案内 */
 .upload-status {
     background: #EDF5EF;
     border: 1px solid #D8E7DC;
     border-radius: 10px;
 
-    padding: 8px 12px;
+    padding: 7px 11px;
 
     margin-top: 5px;
     margin-bottom: 13px;
 
     color: #536C5B;
 
-    font-size: 0.76rem;
-    line-height: 1.45;
+    font-size: 0.73rem;
+    line-height: 1.4;
     font-weight: 600;
 }
 
-
-/* FileUploader */
-[data-testid="stFileUploader"] small {
-    display: none !important;
-}
-
-[data-testid="stFileUploaderDropzoneInstructions"] small {
-    display: none !important;
-}
-
-[data-testid="stFileUploader"] section small {
-    display: none !important;
-}
-
-
-/* 200MB表示を非表示 */
-[data-testid="stFileUploader"] section > div > div:last-child {
-    font-size: 0 !important;
-    line-height: 0 !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    max-height: 0 !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-[data-testid="stFileUploader"] section > div > div:last-child * {
-    display: none !important;
-}
-
-[data-testid="stFileUploader"]
-[data-testid="stFileUploaderDropzoneInstructions"]
-> div:nth-child(2) {
-    display: none !important;
+.upload-change-note {
+    color: #8A968D;
+    font-size: 0.58rem;
+    font-weight: 400;
+    margin-top: 3px;
 }
 
 
 /* 結果カード */
 .result-card {
     border-radius: 18px;
-
     padding: 18px 20px;
-
     margin-bottom: 20px;
 
     line-height: 1.58;
-
     font-size: 0.91rem;
-
     color: #363636;
 
     border: 1px solid rgba(70, 90, 75, 0.09);
@@ -341,11 +314,8 @@ footer {
 /* 免責 */
 .disclaimer {
     color: #AAAAAA;
-
     font-size: 0.48rem;
-
     line-height: 1.45;
-
     margin-top: 6px;
     margin-bottom: 14px;
 }
@@ -359,7 +329,6 @@ h3 {
         serif !important;
 
     color: #42564A !important;
-
     letter-spacing: 0.02em;
 }
 
@@ -367,13 +336,9 @@ h3 {
 /* ボタン */
 div.stButton > button {
     width: 100%;
-
     min-height: 50px;
-
     border-radius: 14px;
-
     font-size: 16px;
-
     font-weight: 700;
 }
 
@@ -391,14 +356,12 @@ div.stButton > button {
 
 .st-key-action_buttons [data-testid="column"] {
     width: auto !important;
-
     min-width: 0 !important;
-
     flex: none !important;
 }
 
 
-/* Q7 2列 */
+/* Q7 */
 .st-key-fatigue_grid [data-testid="stHorizontalBlock"] {
     display: grid !important;
 
@@ -411,9 +374,7 @@ div.stButton > button {
 
 .st-key-fatigue_grid [data-testid="column"] {
     width: auto !important;
-
     min-width: 0 !important;
-
     flex: none !important;
 }
 
@@ -423,14 +384,12 @@ div.stButton > button {
 
     .block-container {
         padding-top: 2.7rem;
-
         padding-left: 1rem;
         padding-right: 1rem;
     }
 
     .top-credit {
         font-size: 9px;
-
         margin-top: 26px;
         margin-bottom: 10px;
     }
@@ -441,9 +400,7 @@ div.stButton > button {
 
     .english-title {
         font-size: 0.65rem;
-
         letter-spacing: 0.13em;
-
         margin-bottom: 1.9rem;
     }
 
@@ -453,9 +410,7 @@ div.stButton > button {
 
     .guide-card {
         padding: 13px 15px;
-
         font-size: 0.86rem;
-
         line-height: 1.4;
     }
 
@@ -473,17 +428,18 @@ div.stButton > button {
     }
 
     .upload-status {
-        font-size: 0.70rem;
+        font-size: 0.68rem;
         padding: 7px 10px;
+    }
+
+    .upload-change-note {
+        font-size: 0.54rem;
     }
 
     .result-card {
         padding: 16px 17px;
-
         font-size: 0.88rem;
-
         line-height: 1.55;
-
         margin-bottom: 18px;
     }
 
@@ -545,6 +501,10 @@ def show_upload_status(uploaded_file):
         f"""
 <div class="upload-status">
 ✓ アップロード済み：{filename}
+
+<div class="upload-change-note">
+別の写真に変える場合は、上のファイル表示から削除して選び直してください。
+</div>
 </div>
 """,
         unsafe_allow_html=True
@@ -552,7 +512,7 @@ def show_upload_status(uploaded_file):
 
 
 # =========================================================
-# 画像軽量化
+# 画像読み込み・軽量化
 # =========================================================
 def uploaded_to_rgb(
     uploaded_file,
@@ -561,17 +521,11 @@ def uploaded_to_rgb(
 
     uploaded_file.seek(0)
 
-    with Image.open(
-        uploaded_file
-    ) as image:
+    with Image.open(uploaded_file) as image:
 
-        image = ImageOps.exif_transpose(
-            image
-        )
+        image = ImageOps.exif_transpose(image)
 
-        image = image.convert(
-            "RGB"
-        )
+        image = image.convert("RGB")
 
         image.thumbnail(
             (
@@ -592,9 +546,7 @@ def uploaded_to_rgb(
 # =========================================================
 # 最大輪郭
 # =========================================================
-def largest_contour(
-    mask
-):
+def largest_contour(mask):
 
     contours, _ = cv2.findContours(
         mask,
@@ -614,15 +566,10 @@ def largest_contour(
 # =========================================================
 # マスク整理
 # =========================================================
-def clean_mask(
-    binary
-):
+def clean_mask(binary):
 
     kernel = np.ones(
-        (
-            5,
-            5
-        ),
+        (5, 5),
         np.uint8
     )
 
@@ -640,22 +587,16 @@ def clean_mask(
         iterations=1
     )
 
-    contour = largest_contour(
-        binary
-    )
+    contour = largest_contour(binary)
 
     if contour is None:
         return None
 
-    clean = np.zeros_like(
-        binary
-    )
+    clean = np.zeros_like(binary)
 
     cv2.drawContours(
         clean,
-        [
-            contour
-        ],
+        [contour],
         -1,
         255,
         -1
@@ -665,11 +606,9 @@ def clean_mask(
 
 
 # =========================================================
-# 足領域
+# 足領域検出
 # =========================================================
-def segment_foot(
-    rgb
-):
+def segment_foot(rgb):
 
     h, w = rgb.shape[:2]
 
@@ -714,9 +653,7 @@ def segment_foot(
     background = np.median(
         corners,
         axis=0
-    ).astype(
-        np.int16
-    )
+    ).astype(np.int16)
 
     diff = (
         rgb.astype(np.int16)
@@ -735,9 +672,7 @@ def segment_foot(
         distance,
         0,
         255
-    ).astype(
-        np.uint8
-    )
+    ).astype(np.uint8)
 
     _, binary = cv2.threshold(
         distance,
@@ -748,16 +683,12 @@ def segment_foot(
         cv2.THRESH_OTSU
     )
 
-    mask = clean_mask(
-        binary
-    )
+    mask = clean_mask(binary)
 
     if mask is None:
         return None
 
-    contour = largest_contour(
-        mask
-    )
+    contour = largest_contour(mask)
 
     if contour is None:
         return None
@@ -800,6 +731,7 @@ def crop_to_mask(
             y1:y2 + 1,
             x1:x2 + 1
         ],
+
         mask[
             y1:y2 + 1,
             x1:x2 + 1
@@ -876,25 +808,21 @@ def rotate_bound(
 
 
 # =========================================================
-# 傾き補正
+# 足の傾き補正
 # =========================================================
 def straighten_foot(
     rgb,
     mask
 ):
 
-    contour = largest_contour(
-        mask
-    )
+    contour = largest_contour(mask)
 
     if contour is None:
         return rgb, mask
 
     try:
 
-        rect = cv2.minAreaRect(
-            contour
-        )
+        rect = cv2.minAreaRect(contour)
 
         _, size, angle = rect
 
@@ -979,7 +907,7 @@ def width_in_band(
 
 
 # =========================================================
-# 指側を上
+# 足指を上方向へ
 # =========================================================
 def ensure_toes_top(
     rgb,
@@ -1016,9 +944,7 @@ def ensure_toes_top(
 # =========================================================
 # 輪郭平滑化
 # =========================================================
-def smooth_curve(
-    curve
-):
+def smooth_curve(curve):
 
     curve = np.asarray(
         curve,
@@ -1059,9 +985,7 @@ def smooth_curve(
 # =========================================================
 # 足指輪郭
 # =========================================================
-def build_top_curve(
-    mask
-):
+def build_top_curve(mask):
 
     h, w = mask.shape
 
@@ -1107,9 +1031,7 @@ def build_top_curve(
         x1:x2 + 1
     ]
 
-    missing = ~np.isfinite(
-        curve
-    )
+    missing = ~np.isfinite(curve)
 
     known = np.where(
         ~missing
@@ -1124,9 +1046,7 @@ def build_top_curve(
         curve[known]
     )
 
-    return smooth_curve(
-        curve
-    )
+    return smooth_curve(curve)
 
 
 # =========================================================
@@ -1137,9 +1057,7 @@ def detect_three_toes(
     big_toe_side
 ):
 
-    curve = build_top_curve(
-        mask
-    )
+    curve = build_top_curve(mask)
 
     if curve is None:
         return None
@@ -1194,7 +1112,7 @@ def detect_three_toes(
 
 
 # =========================================================
-# 足型
+# 足型判定
 # =========================================================
 def classify_foot_shape(
     rgb,
@@ -1258,6 +1176,7 @@ def classify_foot_shape(
     big, second, third, foot_length = result
 
 
+    # スクエア型
     spread = (
         max(
             big,
@@ -1281,6 +1200,8 @@ def classify_foot_shape(
         )
 
 
+    # ギリシャ型
+    # 人差し指が明確に長い場合だけ
     greek_difference = (
         big
         -
@@ -1312,7 +1233,7 @@ def classify_foot_shape(
 
 
 # =========================================================
-# 色
+# 足の色
 # =========================================================
 def analyze_color(
     rgb,
@@ -1340,7 +1261,11 @@ def analyze_color(
         mask > 0
     )
 
-    brightness = hsv[:, :, 2]
+    brightness = hsv[
+        :,
+        :,
+        2
+    ]
 
     valid &= (
         brightness > 45
@@ -1355,31 +1280,51 @@ def analyze_color(
 
     H = float(
         np.median(
-            hsv[:, :, 0][valid]
+            hsv[
+                :,
+                :,
+                0
+            ][valid]
         )
     )
 
     S = float(
         np.median(
-            hsv[:, :, 1][valid]
+            hsv[
+                :,
+                :,
+                1
+            ][valid]
         )
     )
 
     V = float(
         np.median(
-            hsv[:, :, 2][valid]
+            hsv[
+                :,
+                :,
+                2
+            ][valid]
         )
     )
 
     A = float(
         np.median(
-            lab[:, :, 1][valid]
+            lab[
+                :,
+                :,
+                1
+            ][valid]
         )
     )
 
     B = float(
         np.median(
-            lab[:, :, 2][valid]
+            lab[
+                :,
+                :,
+                2
+            ][valid]
         )
     )
 
@@ -1495,14 +1440,28 @@ def analyze_texture(
     candidates = (
         (mask > 0)
         &
-        (lab[:, :, 0] > 145)
+        (
+            lab[
+                :,
+                :,
+                0
+            ]
+            >
+            145
+        )
         &
-        (lab[:, :, 2] > 138)
+        (
+            lab[
+                :,
+                :,
+                2
+            ]
+            >
+            138
+        )
     )
 
-    ys, xs = np.where(
-        candidates
-    )
+    ys, xs = np.where(candidates)
 
     if len(xs) < 80:
 
@@ -1572,11 +1531,9 @@ def analyze_texture(
 
 
 # =========================================================
-# 両足分割
+# 両足写真
 # =========================================================
-def split_both(
-    rgb
-):
+def split_both(rgb):
 
     _, w = rgb.shape[:2]
 
@@ -1608,9 +1565,7 @@ def split_both(
 # =========================================================
 # 足型統合
 # =========================================================
-def unify_shapes(
-    results
-):
+def unify_shapes(results):
 
     usable = [
         result
@@ -1651,7 +1606,8 @@ def unify_shapes(
         shape
         for shape, count
         in counts.items()
-        if count == max_count and count > 0
+        if count == max_count
+        and count > 0
     ]
 
     if len(winners) == 1:
@@ -1665,6 +1621,9 @@ def unify_shapes(
             counts[chosen]
         )
 
+
+    # エジプトとギリシャで割れた時は
+    # ギリシャがかなり強い時だけギリシャ
     if (
         scores["ギリシャ型"]
         >
@@ -1678,12 +1637,14 @@ def unify_shapes(
             scores["ギリシャ型"]
         )
 
+
     if scores["エジプト型"] > 0:
 
         return (
             "エジプト型",
             scores["エジプト型"]
         )
+
 
     chosen = max(
         scores,
@@ -1711,11 +1672,10 @@ def analyze_images(
     representative_mask = None
 
 
+    # 右足
     if right_rgb is not None:
 
-        mask = segment_foot(
-            right_rgb
-        )
+        mask = segment_foot(right_rgb)
 
         result = classify_foot_shape(
             right_rgb,
@@ -1730,9 +1690,7 @@ def analyze_images(
                     result[0],
                     min(
                         0.99,
-                        result[1]
-                        +
-                        0.05
+                        result[1] + 0.05
                     )
                 )
             )
@@ -1743,11 +1701,10 @@ def analyze_images(
             representative_mask = mask
 
 
+    # 左足
     if left_rgb is not None:
 
-        mask = segment_foot(
-            left_rgb
-        )
+        mask = segment_foot(left_rgb)
 
         result = classify_foot_shape(
             left_rgb,
@@ -1762,9 +1719,7 @@ def analyze_images(
                     result[0],
                     min(
                         0.99,
-                        result[1]
-                        +
-                        0.05
+                        result[1] + 0.05
                     )
                 )
             )
@@ -1775,6 +1730,7 @@ def analyze_images(
             representative_mask = mask
 
 
+    # 両足
     if both_rgb is not None:
 
         left_part, right_part = split_both(
@@ -1814,20 +1770,19 @@ def analyze_images(
                 both_result
             )
 
+
         if representative_rgb is None:
 
             left_area = (
                 np.count_nonzero(left_mask)
                 if left_mask is not None
-                else
-                0
+                else 0
             )
 
             right_area = (
                 np.count_nonzero(right_mask)
                 if right_mask is not None
-                else
-                0
+                else 0
             )
 
             if right_area >= left_area:
@@ -1854,7 +1809,6 @@ def analyze_images(
 
         foot_color = "判定困難"
         color_info = {}
-
         dryness = "判定困難"
         hard_part = "判定困難"
 
@@ -2021,6 +1975,7 @@ STEP 1　簡単な質問
     )
 
 
+    # Q7
     st.write(
         "Q7. 今、疲れを感じる場所はありますか？"
     )
@@ -2306,9 +2261,7 @@ STEP 2　足裏写真
         key="action_buttons"
     ):
 
-        col1, col2 = st.columns(
-            2
-        )
+        col1, col2 = st.columns(2)
 
         with col1:
 
@@ -2319,6 +2272,7 @@ STEP 2　足裏写真
 
                 st.session_state.step = 1
                 st.rerun()
+
 
         with col2:
 
@@ -2332,12 +2286,8 @@ STEP 2　足裏写真
 
     if diagnose:
 
-        progress = st.progress(
-            0
-        )
-
+        progress = st.progress(0)
         status = st.empty()
-
 
         try:
 
@@ -2353,9 +2303,7 @@ STEP 2　足裏写真
                 else None
             )
 
-            progress.progress(
-                25
-            )
+            progress.progress(25)
 
             right_rgb = (
                 uploaded_to_rgb(
@@ -2365,9 +2313,7 @@ STEP 2　足裏写真
                 else None
             )
 
-            progress.progress(
-                40
-            )
+            progress.progress(40)
 
             left_rgb = (
                 uploaded_to_rgb(
@@ -2377,9 +2323,7 @@ STEP 2　足裏写真
                 else None
             )
 
-            progress.progress(
-                55
-            )
+            progress.progress(55)
 
             status.write(
                 "足裏を確認しています..."
@@ -2391,9 +2335,7 @@ STEP 2　足裏写真
                 left_rgb=left_rgb
             )
 
-            progress.progress(
-                90
-            )
+            progress.progress(90)
 
             st.session_state.analysis = analysis
 
@@ -2403,9 +2345,7 @@ STEP 2　足裏写真
 
             gc.collect()
 
-            progress.progress(
-                100
-            )
+            progress.progress(100)
 
             st.session_state.step = 3
 
@@ -2559,9 +2499,7 @@ opacity:0.72;
     )
 
 
-    # =====================================================
-    # 1 足
-    # =====================================================
+    # 1
     if shape == "エジプト型":
 
         shape_text = (
@@ -2602,9 +2540,7 @@ opacity:0.72;
     )
 
 
-    # =====================================================
-    # 2 色
-    # =====================================================
+    # 2
     if color == "赤み強め":
 
         color_text = (
@@ -2661,9 +2597,7 @@ opacity:0.72;
     )
 
 
-    # =====================================================
-    # 3 心と体
-    # =====================================================
+    # 3
     rest_score = 0
 
     if cold == "はい":
@@ -2712,9 +2646,7 @@ opacity:0.72;
     )
 
 
-    # =====================================================
-    # 4 歩き方
-    # =====================================================
+    # 4
     walk_points = []
 
 
@@ -2792,9 +2724,7 @@ opacity:0.72;
     )
 
 
-    # =====================================================
-    # 5 靴
-    # =====================================================
+    # 5
     if shape == "エジプト型":
 
         shoe_title = (
@@ -2863,9 +2793,7 @@ opacity:0.72;
     )
 
 
-    # =====================================================
-    # 6 性格
-    # =====================================================
+    # 6
     if shape == "エジプト型":
 
         personality = (
@@ -2914,9 +2842,7 @@ opacity:0.72;
     )
 
 
-    # =====================================================
-    # 7 足裏ポイント
-    # =====================================================
+    # 7
     reflex_map = {
         "頭・目": "親指まわり",
         "首": "親指の付け根",
@@ -2942,9 +2868,7 @@ opacity:0.72;
             )
 
         reflex_text = (
-            "<br><br>".join(
-                blocks
-            )
+            "<br><br>".join(blocks)
             +
             "<br><br>"
             "<span class='small-note'>"
@@ -2973,9 +2897,7 @@ opacity:0.72;
     )
 
 
-    # =====================================================
-    # 8 アロマ
-    # =====================================================
+    # 8
     aroma_map = {
 
         "リラックス": (
@@ -3026,9 +2948,7 @@ opacity:0.72;
     )
 
 
-    # =====================================================
-    # 9 セルフケア
-    # =====================================================
+    # 9
     care = []
 
 
@@ -3112,17 +3032,13 @@ opacity:0.72;
 
     result_card(
         "9. セルフケア",
-        "<br><br>".join(
-            care
-        ),
+        "<br><br>".join(care),
         "card-green",
         "compact-card"
     )
 
 
-    # =====================================================
     # 免責
-    # =====================================================
     st.markdown(
         """
 <div class="disclaimer">
@@ -3145,9 +3061,7 @@ opacity:0.72;
     ):
 
         if "analysis" in st.session_state:
-            del st.session_state[
-                "analysis"
-            ]
+            del st.session_state["analysis"]
 
         gc.collect()
 
