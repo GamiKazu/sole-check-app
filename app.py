@@ -96,11 +96,12 @@ footer { visibility: hidden; }
 .question-space { height: 6px; }
 .question-space.tight { height: 2px; }
 .fatigue-question-label {
-    font-size: 1rem;
+    font-size: 0.875rem;
+    font-weight: 400;
     color: #262730;
     margin-top: 2px;
     margin-bottom: 0.3rem;
-    line-height: 1.4;
+    line-height: 1.25;
 }
 .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
     margin-bottom: -10px;
@@ -479,7 +480,9 @@ div.stButton > button {
     .question-space { height: 4px; }
     .question-space.tight { height: 0px; }
     .fatigue-question-label {
-        font-size: 0.98rem;
+        font-size: 0.875rem;
+        font-weight: 400;
+        line-height: 1.25;
         margin-bottom: 0.2rem;
     }
     .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
