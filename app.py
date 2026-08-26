@@ -121,11 +121,16 @@ footer { visibility: hidden; }
     font-weight: 700;
     color: #42564A;
     line-height: 1.5;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 
 .score-grade-badge {
     display: inline-block;
-    margin-left: 7px;
+    flex-shrink: 0;
+    margin-left: 8px;
     padding: 2px 9px;
     border-radius: 999px;
     background: rgba(83, 108, 91, 0.12);
@@ -147,7 +152,7 @@ footer { visibility: hidden; }
 
 .score-grade-guide {
     flex: 0 0 auto;
-    min-width: 82px;
+    min-width: 76px;
     font-family: "Yu Gothic", sans-serif;
     font-size: 0.52rem;
     font-weight: 400;
@@ -156,6 +161,7 @@ footer { visibility: hidden; }
     text-align: left;
     white-space: nowrap;
     padding-top: 1px;
+    transform: translateX(6px);
 }
 
 .score-explain {
@@ -482,22 +488,24 @@ div.stButton > button {
     }
     .result-main { font-size: 1rem; }
     .score-result-row {
-        gap: 10px;
+        gap: 6px;
     }
     .score-result-title {
-        font-size: 1.02rem;
+        font-size: 0.92rem;
+        letter-spacing: -0.01em;
     }
     .score-grade-badge {
-        margin-left: 4px;
-        padding: 2px 7px;
-        font-size: 0.70rem;
+        margin-left: 6px;
+        padding: 2px 6px;
+        font-size: 0.65rem;
     }
     .score-message {
         font-size: 12px;
     }
     .score-grade-guide {
-        min-width: 73px;
-        font-size: 0.48rem;
+        min-width: 68px;
+        font-size: 0.46rem;
+        transform: translateX(8px);
     }
     .score-explain {
         font-size: 0.54rem;
