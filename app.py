@@ -365,7 +365,7 @@ div.stButton > button {
     font-family: "Yu Gothic", sans-serif;
     font-size: 13px;
     font-weight: 500;
-    margin-top: 14px;
+    margin-top: 22px;
     opacity: 0.72;
 }
 
@@ -553,7 +553,7 @@ div.stButton > button {
 
     .score-message {
         font-size: 12px;
-        margin-top: 13px;
+        margin-top: 20px;
     }
 
     .score-grade-guide {
@@ -1897,7 +1897,6 @@ elif st.session_state.step == 3:
       <span class="score-grade-badge">評価 {score_grade}</span>
     </div>
     <div class="score-message">{score_message}</div>
-    <div class="small-note" style="margin-top:10px;">※質問と写真から算出した参考スコアです。</div>
   </div>
   <div class="score-grade-guide">
     <div class="score-grade-guide-title">評価基準</div>
@@ -2171,8 +2170,6 @@ elif st.session_state.step == 3:
         f"""
 <div class="personality-title">{personality_title}</div>
 {personality_text}
-<br><br>
-<span class="small-note">※性格を科学的に判断するものではありません。エンタメとしてお楽しみください。</span>
 """,
         "card-lavender",
         "compact-card",
