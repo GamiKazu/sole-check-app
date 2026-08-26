@@ -1418,34 +1418,7 @@ elif st.session_state.step == 3:
         score_message = "無理をせず、しっかり休むことを意識しましょう"
 
     st.markdown(
-        f"""
-<div class="step-box">
-    <div class="score-result-row">
-        <div class="score-result-main">
-            <div class="score-result-title">
-                診断結果：{score}点
-                <span class="score-grade-badge">評価 {score_grade}</span>
-            </div>
-            <div class="score-message">
-                {score_message}
-            </div>
-        </div>
-
-        <div class="score-grade-guide">
-            <div class="score-grade-guide-title">評価基準</div>
-            90〜100：A<br>
-            75〜89：B<br>
-            55〜74：C<br>
-            40〜54：D<br>
-            0〜39：E
-        </div>
-    </div>
-
-    <div class="score-note">
-        ※6つのコンディションから算出した、このアプリ独自の参考スコアです。
-    </div>
-</div>
-""",
+        f"""<div class="step-box"><div class="score-result-row"><div class="score-result-main"><div class="score-result-title">診断結果：{score}点 <span class="score-grade-badge">評価 {score_grade}</span></div><div class="score-message">{score_message}</div></div><div class="score-grade-guide"><div class="score-grade-guide-title">評価基準</div>90〜100：A<br>75〜89：B<br>55〜74：C<br>40〜54：D<br>0〜39：E</div></div><div class="score-note">※6つのコンディションから算出した、このアプリ独自の参考スコアです。</div></div>""",
         unsafe_allow_html=True
     )
 
