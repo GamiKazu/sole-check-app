@@ -582,11 +582,11 @@ def radar_svg(values):
 
     label_positions = [
         (210, 35, "middle"),
-        (345, 98, "start"),
-        (345, 260, "start"),
+        (404, 98, "end"),
+        (404, 260, "end"),
         (210, 330, "middle"),
-        (95, 260, "end"),
-        (95, 98, "end"),
+        (16, 260, "start"),
+        (16, 98, "start"),
     ]
 
     label_html = []
