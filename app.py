@@ -19,6 +19,9 @@ st.set_page_config(
 if "step" not in st.session_state:
     st.session_state.step = 1
 
+if "scroll_to_top" not in st.session_state:
+    st.session_state.scroll_to_top = False
+
 ASSET_DIR = Path("assets")
 
 
@@ -146,7 +149,7 @@ footer { visibility: hidden; }
     font-family: "Yu Gothic", sans-serif;
     font-size: 13px;
     font-weight: 500;
-    margin-top: 5px;
+    margin-top: 14px;
     opacity: 0.72;
 }
 
@@ -501,6 +504,7 @@ div.stButton > button {
     }
     .score-message {
         font-size: 12px;
+        margin-top: 13px;
     }
     .score-grade-guide {
         min-width: 68px;
@@ -563,6 +567,63 @@ st.markdown(
 # =========================================================
 # 共通UI
 # =========================================================
+def request_scroll_to_top():
+    """次のrerun後に画面最上部へスクロールする。"""
+    st.session_state.scroll_to_top = True
+
+
+def run_scroll_to_top_if_needed():
+    """画面遷移直後だけ、ブラウザのスクロール位置を最上部へ戻す。"""
+    if not st.session_state.get("scroll_to_top", False):
+        return
+
+    st.session_state.scroll_to_top = False
+
+    st.components.v1.html(
+        """
+<script>
+(function () {
+    function scrollTopNow() {
+        try {
+            const parentWindow = window.parent;
+            const doc = parentWindow.document;
+
+            parentWindow.scrollTo(0, 0);
+
+            if (doc.documentElement) {
+                doc.documentElement.scrollTop = 0;
+            }
+            if (doc.body) {
+                doc.body.scrollTop = 0;
+            }
+
+            const candidates = [
+                doc.querySelector('[data-testid="stAppViewContainer"]'),
+                doc.querySelector('[data-testid="stMain"]'),
+                doc.querySelector('section.main')
+            ];
+
+            candidates.forEach(function (el) {
+                if (el) {
+                    el.scrollTop = 0;
+                }
+            });
+        } catch (e) {
+            window.parent.scrollTo(0, 0);
+        }
+    }
+
+    scrollTopNow();
+    setTimeout(scrollTopNow, 50);
+    setTimeout(scrollTopNow, 200);
+})();
+</script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
 def show_upload_status(uploaded_file):
     if uploaded_file is None:
         return
@@ -1175,6 +1236,12 @@ def analyze_images(both_rgb=None, right_rgb=None, left_rgb=None):
 
 
 # =========================================================
+# 画面遷移後のスクロール位置をリセット
+# =========================================================
+run_scroll_to_top_if_needed()
+
+
+# =========================================================
 # STEP1
 # =========================================================
 if st.session_state.step == 1:
@@ -1263,6 +1330,7 @@ if st.session_state.step == 1:
         st.session_state.stumble = stumble
         st.session_state.aroma_goal = aroma_goal
         st.session_state.step = 2
+        request_scroll_to_top()
         st.rerun()
 
 
@@ -1309,6 +1377,7 @@ elif st.session_state.step == 2:
         with col1:
             if st.button("戻る", use_container_width=True):
                 st.session_state.step = 1
+                request_scroll_to_top()
                 st.rerun()
 
         with col2:
@@ -1353,6 +1422,7 @@ elif st.session_state.step == 2:
 
             progress.progress(100)
             st.session_state.step = 3
+            request_scroll_to_top()
             st.rerun()
 
         except Exception as error:
@@ -1894,4 +1964,5 @@ elif st.session_state.step == 3:
             del st.session_state["analysis"]
         gc.collect()
         st.session_state.step = 1
+        request_scroll_to_top()
         st.rerun()
