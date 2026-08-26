@@ -83,8 +83,11 @@ footer { visibility: hidden; }
 
 
 .header-banner-wrap {
-    width: 100%;
-    margin: 0.15rem auto 1.8rem auto;
+    width: calc(100% + 64px);
+    margin-left: -32px;
+    margin-right: -32px;
+    margin-top: 0.15rem;
+    margin-bottom: 1.8rem;
 }
 
 .header-banner {
@@ -491,10 +494,13 @@ div.stButton > button {
         margin-bottom: 1.9rem;
     }
 
-    .header-banner-wrap {
-        margin-top: 0.1rem;
-        margin-bottom: 1.35rem;
-    }
+.header-banner-wrap {
+    width: calc(100% + 2rem);
+    margin-left: -1rem;
+    margin-right: -1rem;
+    margin-top: 0.1rem;
+    margin-bottom: 1.35rem;
+}
 
     .question-space { height: 4px; }
     .question-space.tight { height: 0px; }
