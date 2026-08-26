@@ -1507,8 +1507,8 @@ elif st.session_state.step == 3:
     # 6つのコンディションから加重平均で算出
     # -----------------------------------------------------
     score = round(
-        radar_values["めぐり"] * 0.15
-        + radar_values["すっきり感"] * 0.15
+        radar_values["血流の良さ"] * 0.15
+        + radar_values["脚の軽さ"] * 0.15
         + radar_values["足の元気"] * 0.20
         + radar_values["歩きやすさ"] * 0.15
         + radar_values["足裏状態"] * 0.20
