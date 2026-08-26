@@ -1696,8 +1696,8 @@ elif st.session_state.step == 3:
     high_name, high_score = max(radar_values.items(), key=lambda x: x[1])
 
     condition_phrases = {
-        "めぐり": "冷えや足元のめぐり",
-        "すっきり感": "むくみや重だるさ",
+        "血流の良さ": "冷えや足元の血流",
+        "脚の軽さ": "むくみや重だるさ",
         "足の元気": "足の疲れや持久力",
         "歩きやすさ": "歩行時の安定感",
         "足裏状態": "乾燥や足裏への負担",
