@@ -1396,7 +1396,8 @@ AROMA_MAP = {
 
 REFLEX_MAP = {
     "頭・目": "親指まわり",
-    "首・肩": "親指の付け根〜足指の付け根",
+    "首": "親指の付け根",
+    "肩": "足指の付け根まわり",
     "背中": "足裏の内側",
     "腰": "土踏まずの内側〜かかと寄り",
     "胃まわり": "土踏まずの上側",
@@ -1475,32 +1476,47 @@ if st.session_state.step == 1:
     )
     st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    fatigue_area = st.multiselect(
-        "Q7. 今、疲れを感じる場所はありますか？",
-        [
-            "頭・目",
-            "首・肩",
-            "背中",
-            "腰",
-            "胃まわり",
-            "脚",
-            "全身",
-        ],
-        placeholder="当てはまるものを選択（複数可）",
-        key="q7_fatigue_area",
-    )
+    st.write("Q7. 今、疲れを感じる場所はありますか？")
+    fatigue_area = []
+
+    with st.container(key="fatigue_grid"):
+        row1 = st.columns(2)
+        with row1[0]:
+            if st.checkbox("頭・目", key="fatigue_head"):
+                fatigue_area.append("頭・目")
+        with row1[1]:
+            if st.checkbox("首", key="fatigue_neck"):
+                fatigue_area.append("首")
+
+        row2 = st.columns(2)
+        with row2[0]:
+            if st.checkbox("肩", key="fatigue_shoulder"):
+                fatigue_area.append("肩")
+        with row2[1]:
+            if st.checkbox("背中", key="fatigue_back"):
+                fatigue_area.append("背中")
+
+        row3 = st.columns(2)
+        with row3[0]:
+            if st.checkbox("腰", key="fatigue_waist"):
+                fatigue_area.append("腰")
+        with row3[1]:
+            if st.checkbox("胃まわり", key="fatigue_stomach"):
+                fatigue_area.append("胃まわり")
+
+        row4 = st.columns(2)
+        with row4[0]:
+            if st.checkbox("脚", key="fatigue_leg"):
+                fatigue_area.append("脚")
+        with row4[1]:
+            if st.checkbox("全身", key="fatigue_all"):
+                fatigue_area.append("全身")
+
     st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
     sole_wear = st.selectbox(
         "Q8. 靴底はどこが減りやすいですか？",
-        [
-            "特に偏りはない",
-            "かかとの外側",
-            "かかとの内側",
-            "つま先側",
-            "左右で差がある",
-            "よくわからない",
-        ],
+        ["分からない", "かかとの外側", "かかとの内側", "つま先側", "全体的に均等"],
         key="q8_sole_wear",
     )
     st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
@@ -1727,7 +1743,7 @@ elif st.session_state.step == 3:
     walkability = 94
     if stumble == "はい":
         walkability -= 25
-    if sole_wear in ["かかとの外側", "かかとの内側", "つま先側", "左右で差がある"]:
+    if sole_wear in ["かかとの外側", "かかとの内側", "つま先側"]:
         walkability -= 12
     if foot_concern in ["靴が合いにくい", "歩き方が気になる"]:
         walkability -= 12
@@ -1981,9 +1997,9 @@ elif st.session_state.step == 3:
         shoe_text += (
             "<br><br>かかとの内側が減りやすい場合は、土踏まずまわりのフィット感も確認してみてください。"
         )
-    elif sole_wear == "左右で差がある":
+    elif sole_wear == "つま先側":
         shoe_text += (
-            "<br><br>左右差が大きい場合は、左右それぞれのフィット感を確認するのがおすすめです。"
+            "<br><br>つま先側が減りやすい場合は、前足部に負担が集中していないかも確認してみてください。"
         )
 
     result_card_with_image(
