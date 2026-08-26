@@ -96,33 +96,30 @@ footer { visibility: hidden; }
 .question-space { height: 6px; }
 .question-space.tight { height: 2px; }
 .fatigue-question-label {
-    font-size: 0.875rem;
-    font-weight: 400;
+    font-size: 1rem;
     color: #262730;
-    margin-top: 0;
-    margin-bottom: 0.35rem;
-    line-height: 1.45;
+    margin-top: 2px;
+    margin-bottom: 0.3rem;
+    line-height: 1.4;
 }
-
-/* Q7チェックボックスの間隔を確実に詰める */
-.st-key-fatigue_checkbox_group [data-testid="stHorizontalBlock"] {
-    gap: 1rem !important;
-}
-
-.st-key-fatigue_checkbox_group [data-testid="column"] > [data-testid="stVerticalBlock"] {
-    gap: 0.15rem !important;
-}
-
 .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
-    margin: 0 !important;
-    padding: 0 !important;
+    margin-bottom: -10px;
+}
+.st-key-fatigue_checkbox_group [data-testid="stCheckbox"] label {
+    padding-top: 0.05rem;
+    padding-bottom: 0.05rem;
+}
+.st-key-fatigue_checkbox_group [data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 0.9rem !important;
 }
 
-.st-key-fatigue_checkbox_group [data-testid="stCheckbox"] label {
-    margin: 0 !important;
-    padding-top: 0.05rem !important;
-    padding-bottom: 0.05rem !important;
-    min-height: 2rem !important;
+.st-key-fatigue_checkbox_group [data-testid="column"] {
+    width: calc(50% - 0.45rem) !important;
+    min-width: 0 !important;
+    flex: 1 1 50% !important;
 }
 
 .guide-card {
@@ -477,19 +474,23 @@ div.stButton > button {
     .question-space { height: 4px; }
     .question-space.tight { height: 0px; }
     .fatigue-question-label {
-        font-size: 0.875rem;
-        font-weight: 400;
-        margin-bottom: 0.3rem;
+        font-size: 0.98rem;
+        margin-bottom: 0.2rem;
+    }
+    .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
+        margin-bottom: -12px;
+    }
+    .st-key-fatigue_checkbox_group [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 0.75rem !important;
     }
 
-    .st-key-fatigue_checkbox_group [data-testid="column"] > [data-testid="stVerticalBlock"] {
-        gap: 0.05rem !important;
-    }
-
-    .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] label {
-        min-height: 1.8rem !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
+    .st-key-fatigue_checkbox_group [data-testid="column"] {
+        width: calc(50% - 0.375rem) !important;
+        min-width: 0 !important;
+        flex: 1 1 50% !important;
     }
 
     .guide-card {
@@ -1529,18 +1530,28 @@ if st.session_state.step == 1:
     )
 
     with st.container(key="fatigue_checkbox_group"):
-        q7_col1, q7_col2 = st.columns(2, gap="small")
-
-        with q7_col1:
+        row1_col1, row1_col2 = st.columns(2, gap="small")
+        with row1_col1:
             q7_head_eye = st.checkbox("頭・目", key="q7_head_eye")
-            q7_shoulder = st.checkbox("肩", key="q7_shoulder")
-            q7_waist = st.checkbox("腰", key="q7_waist")
-            q7_leg = st.checkbox("脚", key="q7_leg")
-
-        with q7_col2:
+        with row1_col2:
             q7_neck = st.checkbox("首", key="q7_neck")
+
+        row2_col1, row2_col2 = st.columns(2, gap="small")
+        with row2_col1:
+            q7_shoulder = st.checkbox("肩", key="q7_shoulder")
+        with row2_col2:
             q7_back = st.checkbox("背中", key="q7_back")
+
+        row3_col1, row3_col2 = st.columns(2, gap="small")
+        with row3_col1:
+            q7_waist = st.checkbox("腰", key="q7_waist")
+        with row3_col2:
             q7_stomach = st.checkbox("胃まわり", key="q7_stomach")
+
+        row4_col1, row4_col2 = st.columns(2, gap="small")
+        with row4_col1:
+            q7_leg = st.checkbox("脚", key="q7_leg")
+        with row4_col2:
             q7_whole = st.checkbox("全身", key="q7_whole")
 
     fatigue_area = []
