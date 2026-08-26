@@ -956,18 +956,15 @@ def analyze_color(rgb, mask):
     A = float(np.median(lab[:, :, 1][valid]))
     B = float(np.median(lab[:, :, 2][valid]))
 
-    # 色味の簡易分類
-    # ※照明・カメラ・肌の色で見え方が変わるため、あくまで参考判定
-    if S < 32 and V > 190:
+    # 前回まで使っていた判定ロジック
+    if S < 35 and V > 185:
         result = "白っぽい"
-    elif 125 <= H <= 175 and S >= 35:
-        result = "紫っぽい"
-    elif (H <= 5 or H >= 176) and S >= 60 and A >= 138:
+    elif (H <= 5 or H >= 176) and S >= 55 and A >= 135:
         result = "赤み強め"
-    elif 17 < H <= 35 and S >= 42 and B >= 136:
+    elif 5 < H <= 17 and S >= 45:
+        result = "オレンジ寄り"
+    elif 17 < H <= 32 and S >= 45 and B >= 135:
         result = "黄み強め"
-    elif ((H <= 8 or H >= 176) and 25 <= S < 60 and V >= 150):
-        result = "ピンク寄り"
     else:
         result = "標準的な色味"
 
@@ -1370,7 +1367,7 @@ elif st.session_state.step == 3:
     if analysis["hard_part"] not in ["なし", "判定困難"]:
         sole_condition -= 15
 
-    if color in ["赤み強め", "黄み強め", "紫っぽい", "白っぽい"]:
+    if color in ["赤み強め", "オレンジ寄り", "黄み強め", "白っぽい"]:
         sole_condition -= 8
 
     rest_balance = 100
@@ -1464,7 +1461,19 @@ elif st.session_state.step == 3:
     # -----------------------------------------------------
     # 2 足の色
     # -----------------------------------------------------
-    if color == "黄み強め":
+    if color == "オレンジ寄り":
+        color_text = (
+            "写真では、足裏が少しオレンジ寄りに見えます。"
+            "<br><br><span class='care-title'>オレンジ色｜活動量と疲れが重なりやすい状態</span><br>"
+            "リフレクソロジーの考え方では、オレンジ寄りの足裏は、活動量が多い時や、"
+            "疲れがたまっている時などに見られる色として捉えることがあります。"
+            "<br><br>"
+            "頑張りが続いている時は、足を温めたり、軽くほぐしたりして、"
+            "意識的に休む時間をつくってみてください。"
+            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。</span>"
+        )
+
+    elif color == "黄み強め":
         color_text = (
             "写真では、足裏がやや黄色っぽく見えます。"
             "<br><br><span class='care-title'>黄色｜ストレス・消化器の疲れを意識したい色</span><br>"
