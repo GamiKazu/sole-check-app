@@ -1890,9 +1890,24 @@ elif st.session_state.step == 3:
     st.markdown(
         f"""
 <div class="step-box">
-    <div class="score-result-title">診断結果：{score}点</div>
+<div class="score-result-row">
+  <div class="score-result-main">
+    <div class="score-result-title">
+      診断結果：{score}点
+      <span class="score-grade-badge">評価 {score_grade}</span>
+    </div>
     <div class="score-message">{score_message}</div>
     <div class="small-note" style="margin-top:10px;">※質問と写真から算出した参考スコアです。</div>
+  </div>
+  <div class="score-grade-guide">
+    <div class="score-grade-guide-title">評価基準</div>
+    90〜100：A<br>
+    75〜89：B<br>
+    55〜74：C<br>
+    40〜54：D<br>
+    0〜39：E
+  </div>
+</div>
 </div>
 """,
         unsafe_allow_html=True,
@@ -1900,6 +1915,21 @@ elif st.session_state.step == 3:
 
     st.markdown(
         radar_svg(radar_values),
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+<div class="small-note" style="margin-top:-10px; margin-bottom:22px; line-height:1.65;">
+<b>6項目の見方</b><br>
+・めぐり：冷えにくく、足先までめぐりが保たれているほど高得点<br>
+・すっきり感：むくみや重だるさが少ないほど高得点<br>
+・足の元気：立つ・歩くことで疲れにくいほど高得点<br>
+・歩きやすさ：つまずきや靴底の偏りが少ないほど高得点<br>
+・足裏状態：乾燥や硬くなった部分が少ないほど高得点<br>
+・休息バランス：疲れがたまりにくく、休息が取れているほど高得点
+</div>
+""",
         unsafe_allow_html=True,
     )
 
