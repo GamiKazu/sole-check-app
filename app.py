@@ -41,7 +41,7 @@ html, body, [class*="css"] {
 
 .block-container {
     max-width: 760px;
-    padding-top: 2.6rem;
+    padding-top: 0 !important;
     padding-bottom: 4rem;
 }
 
@@ -51,13 +51,13 @@ footer { visibility: hidden; }
 
 .top-credit {
     width: 100%;
-    text-align: right;
-    font-size: 10px;
+    text-align: left;
+    font-size: 9px;
     color: #999999;
     opacity: 0.82;
     letter-spacing: 0.05em;
-    margin-top: 20px;
-    margin-bottom: 10px;
+    margin-top: 5px;
+    margin-bottom: 14px;
 }
 
 .main-title {
@@ -475,15 +475,15 @@ div.stButton > button {
 
 @media (max-width: 600px) {
     .block-container {
-        padding-top: 2.7rem;
+        padding-top: 0 !important;
         padding-left: 1rem;
         padding-right: 1rem;
     }
 
     .top-credit {
-        font-size: 9px;
-        margin-top: 26px;
-        margin-bottom: 10px;
+        font-size: 8px;
+        margin-top: 5px;
+        margin-bottom: 14px;
     }
 
     .main-title { font-size: 2rem; }
@@ -639,18 +639,15 @@ def header_file_to_data_uri(path):
 # =========================================================
 # HEADER
 # =========================================================
-st.markdown(
-    '<div class="top-credit">Created by GamiKazu</div>',
-    unsafe_allow_html=True,
-)
-
 banner_uri = header_file_to_data_uri(ASSET_DIR / "header_banner.png")
+
 if banner_uri:
     st.markdown(
         f"""
 <div class="header-banner-wrap">
     <img class="header-banner" src="{banner_uri}" alt="足裏タイプ診断">
 </div>
+<div class="top-credit">Created by GamiKazu</div>
 """,
         unsafe_allow_html=True,
     )
