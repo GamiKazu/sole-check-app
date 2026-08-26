@@ -534,6 +534,38 @@ div.stButton > button {
         margin-bottom: 12px;
     }
 }
+
+/* Q7 疲労部位チェックボックスを2列に固定 */
+.st-key-fatigue_grid [data-testid="stHorizontalBlock"] {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.35rem 1rem !important;
+    align-items: start !important;
+}
+
+.st-key-fatigue_grid [data-testid="column"] {
+    width: auto !important;
+    min-width: 0 !important;
+    flex: none !important;
+}
+
+.st-key-fatigue_grid .stCheckbox {
+    margin-bottom: 0 !important;
+}
+
+.st-key-fatigue_grid .stCheckbox label {
+    min-height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+@media (max-width: 600px) {
+    .st-key-fatigue_grid [data-testid="stHorizontalBlock"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.25rem 0.7rem !important;
+    }
+}
+
 </style>
 """,
     unsafe_allow_html=True,
