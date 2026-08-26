@@ -94,6 +94,15 @@ footer { visibility: hidden; }
     margin-top: 8px;
 }
 
+.score-guide {
+    font-family: "Yu Gothic", sans-serif;
+    font-size: 0.56rem;
+    font-weight: 400;
+    color: #8D968F;
+    margin-top: 6px;
+    line-height: 1.45;
+}
+
 .question-space { height: 12px; }
 
 .guide-card {
@@ -573,11 +582,11 @@ def radar_svg(values):
 
     label_positions = [
         (210, 35, "middle"),
-        (360, 98, "start"),
-        (360, 260, "start"),
+        (345, 98, "start"),
+        (345, 260, "start"),
         (210, 330, "middle"),
-        (60, 260, "end"),
-        (60, 98, "end"),
+        (78, 260, "end"),
+        (78, 98, "end"),
     ]
 
     label_html = []
@@ -1244,67 +1253,7 @@ elif st.session_state.step == 3:
     color = analysis["foot_color"]
 
     # -----------------------------------------------------
-    # 総合スコア
-    # -----------------------------------------------------
-    score = 100
-
-    if cold == "はい":
-        score -= 8
-    if swelling == "はい":
-        score -= 8
-    if tired == "はい":
-        score -= 10
-    if standing == "はい":
-        score -= 4
-    if stumble == "はい":
-        score -= 6
-
-    if len(fatigue_area) == 1:
-        score -= 4
-    elif len(fatigue_area) >= 2:
-        score -= 8
-
-    if analysis["dryness"] == "やや乾燥":
-        score -= 5
-    elif analysis["dryness"] == "乾燥が目立つ":
-        score -= 10
-
-    if analysis["hard_part"] not in ["なし", "判定困難"]:
-        score -= 5
-
-    if color == "赤み強め":
-        score -= 5
-    elif color == "オレンジ寄り":
-        score -= 3
-    elif color == "白っぽい":
-        score -= 4
-
-    score = max(40, min(100, score))
-
-    if score >= 85:
-        score_message = "今は比較的良い状態です"
-    elif score >= 70:
-        score_message = "大きな偏りは少ない状態です"
-    elif score >= 55:
-        score_message = "少しセルフケアを意識したい状態です"
-    else:
-        score_message = "今日はゆっくり休むことを意識しましょう"
-
-    st.markdown(
-        f"""
-<div class="step-box">
-診断結果：{score}点
-<div style="font-family:'Yu Gothic',sans-serif;font-size:13px;font-weight:500;margin-top:5px;opacity:0.72;">
-{score_message}
-</div>
-<div class="score-note">※質問と写真から算出した参考スコアです。</div>
-</div>
-""",
-        unsafe_allow_html=True
-    )
-
-    # -----------------------------------------------------
-    # 6角形レーダーチャート
+    # 6つのコンディション
     # -----------------------------------------------------
     circulation = 100
     if cold == "はい":
@@ -1335,8 +1284,10 @@ elif st.session_state.step == 3:
         sole_condition -= 18
     elif analysis["dryness"] == "乾燥が目立つ":
         sole_condition -= 32
+
     if analysis["hard_part"] not in ["なし", "判定困難"]:
         sole_condition -= 15
+
     if color in ["赤み強め", "オレンジ寄り", "白っぽい"]:
         sole_condition -= 8
 
@@ -1354,6 +1305,51 @@ elif st.session_state.step == 3:
         "休息バランス": clamp(rest_balance, 35, 100),
     }
 
+    # -----------------------------------------------------
+    # 総合スコア
+    # 6つのコンディションから加重平均で算出
+    # -----------------------------------------------------
+    score = round(
+        radar_values["めぐり"] * 0.15
+        + radar_values["すっきり感"] * 0.15
+        + radar_values["足の元気"] * 0.20
+        + radar_values["歩きやすさ"] * 0.15
+        + radar_values["足裏状態"] * 0.20
+        + radar_values["休息バランス"] * 0.15
+    )
+
+    score = max(40, min(100, score))
+
+    if score >= 85:
+        score_message = "今は比較的良い状態です"
+    elif score >= 70:
+        score_message = "大きな偏りは少ない状態です"
+    elif score >= 55:
+        score_message = "少しセルフケアを意識したい状態です"
+    else:
+        score_message = "今日はゆっくり休むことを意識しましょう"
+
+    st.markdown(
+        f"""
+<div class="step-box">
+診断結果：{score}点
+<div style="font-family:'Yu Gothic',sans-serif;font-size:13px;font-weight:500;margin-top:5px;opacity:0.72;">
+{score_message}
+</div>
+<div class="score-guide">
+目安：85〜100 良好 / 70〜84 比較的良好 / 55〜69 ケアを意識 / 40〜54 休息・ケアを意識
+</div>
+<div class="score-note">
+※6つのコンディションから算出した、このアプリ独自の参考スコアです。
+</div>
+</div>
+""",
+        unsafe_allow_html=True
+    )
+
+    # -----------------------------------------------------
+    # 6角形レーダーチャート
+    # -----------------------------------------------------
     st.markdown(radar_svg(radar_values), unsafe_allow_html=True)
 
     # -----------------------------------------------------
