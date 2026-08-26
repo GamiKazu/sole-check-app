@@ -1494,8 +1494,8 @@ elif st.session_state.step == 3:
         rest_balance -= 12
 
     radar_values = {
-        "めぐり": clamp(circulation, 35, 100),
-        "すっきり感": clamp(freshness, 35, 100),
+        "血流の良さ": clamp(circulation, 35, 100),
+        "脚の軽さ": clamp(freshness, 35, 100),
         "足の元気": clamp(energy, 35, 100),
         "歩きやすさ": clamp(walkability, 35, 100),
         "足裏状態": clamp(sole_condition, 35, 100),
