@@ -81,6 +81,20 @@ footer { visibility: hidden; }
     margin-bottom: 2.2rem;
 }
 
+
+.header-banner-wrap {
+    width: 100%;
+    margin: 0.15rem auto 1.8rem auto;
+}
+
+.header-banner {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 0;
+    box-shadow: none;
+}
+
 .step-box {
     padding: 15px 20px;
     border-radius: 16px;
@@ -477,6 +491,11 @@ div.stButton > button {
         margin-bottom: 1.9rem;
     }
 
+    .header-banner-wrap {
+        margin-top: 0.1rem;
+        margin-bottom: 1.35rem;
+    }
+
     .question-space { height: 4px; }
     .question-space.tight { height: 0px; }
     .fatigue-question-label {
@@ -600,17 +619,35 @@ div.stButton > button {
 )
 
 
+
+def header_file_to_data_uri(path):
+    path = Path(path)
+    if not path.exists():
+        return None
+    suffix = path.suffix.lower()
+    mime = "image/png" if suffix == ".png" else "image/jpeg"
+    encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
+    return f"data:{mime};base64,{encoded}"
+
+
 # =========================================================
 # HEADER
 # =========================================================
 st.markdown(
-    """
-<div class="top-credit">Created by GamiKazu</div>
-<div class="main-title">足裏タイプ診断</div>
-<div class="english-title">REFLEXOLOGY × AROMATHERAPY</div>
-""",
+    '<div class="top-credit">Created by GamiKazu</div>',
     unsafe_allow_html=True,
 )
+
+banner_uri = header_file_to_data_uri(ASSET_DIR / "header_banner.png")
+if banner_uri:
+    st.markdown(
+        f"""
+<div class="header-banner-wrap">
+    <img class="header-banner" src="{banner_uri}" alt="足裏タイプ診断">
+</div>
+""",
+        unsafe_allow_html=True,
+    )
 
 
 # =========================================================
