@@ -1798,14 +1798,8 @@ elif st.session_state.step == 3:
     else:
         personality = "今回は足型をはっきり判定できなかったため、この項目は判定できませんでした。"
 
-    personality += (
-        "<br><br><span class='small-note'>"
-        "※足型にまつわる一般的な見方をもとにした参考・エンタメコンテンツです。"
-        "</span>"
-    )
-
     result_card(
-        "6. 足型から見る性格傾向（参考）",
+        "6. 足型から見る性格傾向",
         personality,
         "card-lavender",
         "compact-card"
