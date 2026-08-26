@@ -1464,7 +1464,6 @@ elif st.session_state.step == 3:
   <div class="score-result-main">
     <div class="score-result-title">総合コンディション：{score}点 <span class="score-grade-badge">評価 {score_grade}</span></div>
     <div class="score-message">{score_message}</div>
-    <div class="score-explain">質問回答と足裏写真から算出した、今回の状態をみるための100点満点の参考スコアです。</div>
   </div>
   <div class="score-grade-guide">
     <div class="score-grade-guide-title">評価基準</div>
@@ -1528,7 +1527,7 @@ elif st.session_state.step == 3:
     elif color == "黄み強め":
         color_text = (
             "写真では、足裏がやや黄色っぽく見えます。"
-            "<br><br><span class='care-title'>黄色｜ストレス・消化器の疲れを意識したい色</span><br>"
+            "<br><br><span class='care-title'>黄色｜ストレス・消化器の疲れ</span><br>"
             "黄色っぽい足裏は、リフレクソロジーではストレスや消化器まわりの疲れを意識する色として捉えることがあります。"
             "食事の時間が不規則になっていないか、胃腸に負担をかけていないか、考えごとが続いていないかを振り返る目安にしてみてください。"
             "<br><br>"
@@ -1539,7 +1538,7 @@ elif st.session_state.step == 3:
     elif color == "赤み強め":
         color_text = (
             "写真では、足裏の赤みがやや強く見えます。"
-            "<br><br><span class='care-title'>赤色｜エネルギー過剰・自律神経の乱れを意識したい色</span><br>"
+            "<br><br><span class='care-title'>赤色｜エネルギー過剰・自律神経の乱れ</span><br>"
             "赤みが強い時は、活動量が多い時や気持ちが高ぶっている時など、"
             "エネルギーが過剰になっている状態として捉えることがあります。"
             "イライラしやすい、怒りっぽいなど、感情が不安定になりやすい時の目安として見ることもあります。"
@@ -1555,7 +1554,7 @@ elif st.session_state.step == 3:
     elif color == "紫っぽい":
         color_text = (
             "写真では、足裏がやや紫っぽく見えます。"
-            "<br><br><span class='care-title'>紫色｜巡りの低下を意識したい色</span><br>"
+            "<br><br><span class='care-title'>紫色｜血液循環の低下</span><br>"
             "紫っぽい色は、冷えや疲れが重なっている時など、"
             "足元の巡りが低下している状態の目安として捉えることがあります。"
             "<br><br>"
@@ -1567,7 +1566,7 @@ elif st.session_state.step == 3:
     elif color == "白っぽい":
         color_text = (
             "写真では、足裏がやや白っぽく見えます。"
-            "<br><br><span class='care-title'>白色｜休息を意識したい色</span><br>"
+            "<br><br><span class='care-title'>白色｜エネルギー低下</span><br>"
             "白っぽい足裏は、疲れや冷えを感じている時など、"
             "エネルギーが低下している状態の目安として捉えることがあります。"
             "<br><br>"
