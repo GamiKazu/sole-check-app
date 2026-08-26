@@ -184,34 +184,55 @@ footer { visibility: hidden; }
     font-weight: 700;
     color: #405348;
 }
+.visual-result-name {
+    display: block;
+    margin-bottom: 10px;
+}
 
- .result-image-wrap {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin: 12px 0 15px 0;
+.result-image-wrap {
+    width: fit-content;
+    max-width: 100%;
+    display: block;
+    margin: 10px auto 14px auto;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    line-height: 0;
 }
 
 .result-image {
     width: auto;
     height: auto;
     display: block;
+    margin: 0 auto;
+    padding: 0;
     object-fit: contain;
-    background: transparent;
+    background: transparent !important;
+    border: 0;
+    box-shadow: none;
 }
 
 .result-image.foot-image {
-    max-width: 210px;
+    max-width: 185px;
+    max-height: 215px;
 }
 
 .result-image.shoe-image {
-    max-width: 290px;
+    max-width: 265px;
+    max-height: 150px;
 }
 
 .result-image.aroma-image {
-    max-width: 190px;
+    max-width: 165px;
+    max-height: 165px;
 }
 
+.visual-description {
+    display: block;
+    margin-top: 2px;
+}
 .care-title {
     font-weight: 700;
     color: #536C5B;
@@ -389,6 +410,30 @@ div.stButton > button {
     .radar-card { padding: 10px 3px 7px 3px; }
     .radar-label { font-size: 12px; }
     .radar-value { font-size: 9px; }
+
+    .result-image.foot-image {
+        max-width: 170px;
+        max-height: 195px;
+    }
+
+    .result-image.shoe-image {
+        max-width: 245px;
+        max-height: 140px;
+    }
+
+    .result-image.aroma-image {
+        max-width: 150px;
+        max-height: 150px;
+    }
+
+    .visual-result-name {
+        margin-bottom: 8px;
+    }
+
+    .result-image-wrap {
+        margin-top: 8px;
+        margin-bottom: 12px;
+    }
 }
 </style>
 """,
@@ -475,12 +520,13 @@ def result_card_with_image(title, result_name, description, card_class, image_pa
                 f'</div>'
             )
 
+    # ①結果名 → ②小さめの透過画像 → ③補足文
     st.markdown(
         f"""
 <div class="result-card {card_class}">
-<span class="result-main">{result_name}</span>
+<div class="result-main visual-result-name">{result_name}</div>
 {image_html}
-<div>{description}</div>
+<div class="visual-description">{description}</div>
 {extra_html}
 </div>
 """,
