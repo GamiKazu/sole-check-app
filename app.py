@@ -93,7 +93,25 @@ footer { visibility: hidden; }
     margin-bottom: 1.45rem;
 }
 
-.question-space { height: 12px; }
+.question-space { height: 6px; }
+.question-space.tight { height: 2px; }
+.fatigue-question-label {
+    font-size: 1rem;
+    color: #262730;
+    margin-top: 2px;
+    margin-bottom: 0.3rem;
+    line-height: 1.4;
+}
+.st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
+    margin-bottom: -10px;
+}
+.st-key-fatigue_checkbox_group [data-testid="stCheckbox"] label {
+    padding-top: 0.05rem;
+    padding-bottom: 0.05rem;
+}
+.st-key-fatigue_checkbox_group [data-testid="stHorizontalBlock"] {
+    gap: 0.9rem !important;
+}
 
 .guide-card {
     background: #FBF7F0;
@@ -444,7 +462,18 @@ div.stButton > button {
         margin-bottom: 1.9rem;
     }
 
-    .question-space { height: 9px; }
+    .question-space { height: 4px; }
+    .question-space.tight { height: 0px; }
+    .fatigue-question-label {
+        font-size: 0.98rem;
+        margin-bottom: 0.2rem;
+    }
+    .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
+        margin-bottom: -12px;
+    }
+    .st-key-fatigue_checkbox_group [data-testid="stHorizontalBlock"] {
+        gap: 0.75rem !important;
+    }
 
     .guide-card {
         padding: 13px 15px;
@@ -534,38 +563,6 @@ div.stButton > button {
         margin-bottom: 12px;
     }
 }
-
-/* Q7 疲労部位チェックボックスを2列に固定 */
-.st-key-fatigue_grid [data-testid="stHorizontalBlock"] {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.35rem 1rem !important;
-    align-items: start !important;
-}
-
-.st-key-fatigue_grid [data-testid="column"] {
-    width: auto !important;
-    min-width: 0 !important;
-    flex: none !important;
-}
-
-.st-key-fatigue_grid .stCheckbox {
-    margin-bottom: 0 !important;
-}
-
-.st-key-fatigue_grid .stCheckbox label {
-    min-height: 30px !important;
-    display: flex !important;
-    align-items: center !important;
-}
-
-@media (max-width: 600px) {
-    .st-key-fatigue_grid [data-testid="stHorizontalBlock"] {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 0.25rem 0.7rem !important;
-    }
-}
-
 </style>
 """,
     unsafe_allow_html=True,
@@ -1428,8 +1425,9 @@ AROMA_MAP = {
 
 REFLEX_MAP = {
     "頭・目": "親指まわり",
-    "首": "親指の付け根",
+    "首": "親指の付け根〜足指の付け根",
     "肩": "足指の付け根まわり",
+    "首・肩": "親指の付け根〜足指の付け根",
     "背中": "足裏の内側",
     "腰": "土踏まずの内側〜かかと寄り",
     "胃まわり": "土踏まずの上側",
@@ -1508,47 +1506,66 @@ if st.session_state.step == 1:
     )
     st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
 
-    st.write("Q7. 今、疲れを感じる場所はありますか？")
+    st.markdown(
+        '<div class="fatigue-question-label">Q7. 今、疲れを感じる場所はありますか？</div>',
+        unsafe_allow_html=True,
+    )
+
+    with st.container(key="fatigue_checkbox_group"):
+        row1_col1, row1_col2 = st.columns(2, gap="small")
+        with row1_col1:
+            q7_head_eye = st.checkbox("頭・目", key="q7_head_eye")
+        with row1_col2:
+            q7_neck = st.checkbox("首", key="q7_neck")
+
+        row2_col1, row2_col2 = st.columns(2, gap="small")
+        with row2_col1:
+            q7_shoulder = st.checkbox("肩", key="q7_shoulder")
+        with row2_col2:
+            q7_back = st.checkbox("背中", key="q7_back")
+
+        row3_col1, row3_col2 = st.columns(2, gap="small")
+        with row3_col1:
+            q7_waist = st.checkbox("腰", key="q7_waist")
+        with row3_col2:
+            q7_stomach = st.checkbox("胃まわり", key="q7_stomach")
+
+        row4_col1, row4_col2 = st.columns(2, gap="small")
+        with row4_col1:
+            q7_leg = st.checkbox("脚", key="q7_leg")
+        with row4_col2:
+            q7_whole = st.checkbox("全身", key="q7_whole")
+
     fatigue_area = []
+    if q7_head_eye:
+        fatigue_area.append("頭・目")
+    if q7_neck:
+        fatigue_area.append("首")
+    if q7_shoulder:
+        fatigue_area.append("肩")
+    if q7_back:
+        fatigue_area.append("背中")
+    if q7_waist:
+        fatigue_area.append("腰")
+    if q7_stomach:
+        fatigue_area.append("胃まわり")
+    if q7_leg:
+        fatigue_area.append("脚")
+    if q7_whole:
+        fatigue_area.append("全身")
 
-    with st.container(key="fatigue_grid"):
-        row1 = st.columns(2)
-        with row1[0]:
-            if st.checkbox("頭・目", key="fatigue_head"):
-                fatigue_area.append("頭・目")
-        with row1[1]:
-            if st.checkbox("首", key="fatigue_neck"):
-                fatigue_area.append("首")
-
-        row2 = st.columns(2)
-        with row2[0]:
-            if st.checkbox("肩", key="fatigue_shoulder"):
-                fatigue_area.append("肩")
-        with row2[1]:
-            if st.checkbox("背中", key="fatigue_back"):
-                fatigue_area.append("背中")
-
-        row3 = st.columns(2)
-        with row3[0]:
-            if st.checkbox("腰", key="fatigue_waist"):
-                fatigue_area.append("腰")
-        with row3[1]:
-            if st.checkbox("胃まわり", key="fatigue_stomach"):
-                fatigue_area.append("胃まわり")
-
-        row4 = st.columns(2)
-        with row4[0]:
-            if st.checkbox("脚", key="fatigue_leg"):
-                fatigue_area.append("脚")
-        with row4[1]:
-            if st.checkbox("全身", key="fatigue_all"):
-                fatigue_area.append("全身")
-
-    st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="question-space tight"></div>', unsafe_allow_html=True)
 
     sole_wear = st.selectbox(
         "Q8. 靴底はどこが減りやすいですか？",
-        ["分からない", "かかとの外側", "かかとの内側", "つま先側", "全体的に均等"],
+        [
+            "特に偏りはない",
+            "かかとの外側",
+            "かかとの内側",
+            "つま先側",
+            "左右で差がある",
+            "分からない",
+        ],
         key="q8_sole_wear",
     )
     st.markdown('<div class="question-space"></div>', unsafe_allow_html=True)
@@ -1775,7 +1792,7 @@ elif st.session_state.step == 3:
     walkability = 94
     if stumble == "はい":
         walkability -= 25
-    if sole_wear in ["かかとの外側", "かかとの内側", "つま先側"]:
+    if sole_wear in ["かかとの外側", "かかとの内側", "つま先側", "左右で差がある"]:
         walkability -= 12
     if foot_concern in ["靴が合いにくい", "歩き方が気になる"]:
         walkability -= 12
@@ -2029,9 +2046,9 @@ elif st.session_state.step == 3:
         shoe_text += (
             "<br><br>かかとの内側が減りやすい場合は、土踏まずまわりのフィット感も確認してみてください。"
         )
-    elif sole_wear == "つま先側":
+    elif sole_wear == "左右で差がある":
         shoe_text += (
-            "<br><br>つま先側が減りやすい場合は、前足部に負担が集中していないかも確認してみてください。"
+            "<br><br>左右差が大きい場合は、左右それぞれのフィット感を確認するのがおすすめです。"
         )
 
     result_card_with_image(
