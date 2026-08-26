@@ -103,6 +103,66 @@ footer { visibility: hidden; }
     line-height: 1.45;
 }
 
+.score-result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+}
+
+.score-result-main {
+    min-width: 0;
+    flex: 1;
+}
+
+.score-result-title {
+    font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #42564A;
+    line-height: 1.5;
+}
+
+.score-grade-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: rgba(83, 108, 91, 0.12);
+    border: 1px solid rgba(83, 108, 91, 0.18);
+    color: #536C5B;
+    font-family: "Yu Gothic", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    vertical-align: 0.08em;
+}
+
+.score-message {
+    font-family: "Yu Gothic", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 5px;
+    opacity: 0.72;
+}
+
+.score-grade-guide {
+    flex: 0 0 auto;
+    min-width: 82px;
+    font-family: "Yu Gothic", sans-serif;
+    font-size: 0.52rem;
+    font-weight: 400;
+    color: #7F8A82;
+    line-height: 1.52;
+    text-align: left;
+    white-space: nowrap;
+    padding-top: 1px;
+}
+
+.score-grade-guide-title {
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
 .question-space { height: 12px; }
 
 .guide-card {
@@ -413,6 +473,24 @@ div.stButton > button {
         margin-bottom: 18px;
     }
     .result-main { font-size: 1rem; }
+    .score-result-row {
+        gap: 10px;
+    }
+    .score-result-title {
+        font-size: 1.02rem;
+    }
+    .score-grade-badge {
+        margin-left: 4px;
+        padding: 2px 7px;
+        font-size: 0.70rem;
+    }
+    .score-message {
+        font-size: 12px;
+    }
+    .score-grade-guide {
+        min-width: 73px;
+        font-size: 0.48rem;
+    }
     h3 { font-size: 1rem !important; }
     .small-note { font-size: 0.61rem; }
     .disclaimer { font-size: 0.44rem; }
@@ -1302,7 +1380,7 @@ elif st.session_state.step == 3:
         "足の元気": clamp(energy, 35, 100),
         "歩きやすさ": clamp(walkability, 35, 100),
         "足裏状態": clamp(sole_condition, 35, 100),
-        "休息バランス": clamp(rest_balance, 35, 100),
+        "休息状態": clamp(rest_balance, 35, 100),
     }
 
     # -----------------------------------------------------
@@ -1315,33 +1393,57 @@ elif st.session_state.step == 3:
         + radar_values["足の元気"] * 0.20
         + radar_values["歩きやすさ"] * 0.15
         + radar_values["足裏状態"] * 0.20
-        + radar_values["休息バランス"] * 0.15
+        + radar_values["休息状態"] * 0.15
     )
 
-    score = max(40, min(100, score))
+    score = max(0, min(100, score))
 
-    if score >= 85:
+    # -----------------------------------------------------
+    # A〜E評価
+    # -----------------------------------------------------
+    if score >= 90:
+        score_grade = "A"
+        score_message = "今はとてもバランスの良い状態です"
+    elif score >= 75:
+        score_grade = "B"
         score_message = "今は比較的良い状態です"
-    elif score >= 70:
-        score_message = "大きな偏りは少ない状態です"
     elif score >= 55:
+        score_grade = "C"
         score_message = "少しセルフケアを意識したい状態です"
+    elif score >= 40:
+        score_grade = "D"
+        score_message = "今日は休息とセルフケアを意識しましょう"
     else:
-        score_message = "今日はゆっくり休むことを意識しましょう"
+        score_grade = "E"
+        score_message = "無理をせず、しっかり休むことを意識しましょう"
 
     st.markdown(
         f"""
 <div class="step-box">
-診断結果：{score}点
-<div style="font-family:'Yu Gothic',sans-serif;font-size:13px;font-weight:500;margin-top:5px;opacity:0.72;">
-{score_message}
-</div>
-<div class="score-guide">
-目安：85〜100 良好 / 70〜84 比較的良好 / 55〜69 ケアを意識 / 40〜54 休息・ケアを意識
-</div>
-<div class="score-note">
-※6つのコンディションから算出した、このアプリ独自の参考スコアです。
-</div>
+    <div class="score-result-row">
+        <div class="score-result-main">
+            <div class="score-result-title">
+                診断結果：{score}点
+                <span class="score-grade-badge">評価 {score_grade}</span>
+            </div>
+            <div class="score-message">
+                {score_message}
+            </div>
+        </div>
+
+        <div class="score-grade-guide">
+            <div class="score-grade-guide-title">評価基準</div>
+            90〜100：A<br>
+            75〜89：B<br>
+            55〜74：C<br>
+            40〜54：D<br>
+            0〜39：E
+        </div>
+    </div>
+
+    <div class="score-note">
+        ※6つのコンディションから算出した、このアプリ独自の参考スコアです。
+    </div>
 </div>
 """,
         unsafe_allow_html=True
