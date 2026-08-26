@@ -1467,7 +1467,7 @@ elif st.session_state.step == 3:
             "足の色から見る考え方では、赤みが強い時は、活動量が多い時や足元が温まっている時など、"
             "体の活動が色に表れている状態として捉えられることがあります。"
             "少し休んだあとに色の変化を見てみるのもおすすめです。"
-            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。医療的な診断ではありません。</span>"
+            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。</span>"
         )
     elif color == "オレンジ寄り":
         color_text = (
@@ -1476,7 +1476,7 @@ elif st.session_state.step == 3:
             "足の色から見る考え方では、活動による温まりや疲れが重なっている時に、"
             "オレンジ寄りに見えることがあるとされています。"
             "今は比較的よく動いている状態の目安として、参考程度に見てください。"
-            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。医療的な診断ではありません。</span>"
+            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。</span>"
         )
     elif color == "黄み強め":
         color_text = (
@@ -1485,7 +1485,7 @@ elif st.session_state.step == 3:
             "足の色から見る考え方では、疲れがたまっている時のサインとして捉えられることがあります。"
             "また、乾燥や硬くなった部分、照明の影響でも黄みは強く見えるため、"
             "色だけで判断せず足裏全体の状態と一緒に見てみましょう。"
-            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。医療的な診断ではありません。</span>"
+            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。</span>"
         )
     elif color == "白っぽい":
         color_text = (
@@ -1493,7 +1493,7 @@ elif st.session_state.step == 3:
             "<br><br><span class='care-title'>足の色から見る傾向</span><br>"
             "足の色から見る考え方では、疲れや冷えを感じている時の状態として捉えられることがあります。"
             "ただし、撮影時の明るさでも白っぽく見えるため、自然光に近い場所で見比べるのがおすすめです。"
-            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。医療的な診断ではありません。</span>"
+            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。</span>"
         )
     elif color == "判定困難":
         color_text = (
@@ -1507,7 +1507,7 @@ elif st.session_state.step == 3:
             "足の色から見る考え方では、強い赤み・黄み・白っぽさなどの偏りが少ない、"
             "比較的バランスのよい色合いとして捉えられます。"
             "今の色合いをひとつの目安として見てください。"
-            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。医療的な診断ではありません。</span>"
+            "<br><br><span class='small-note'>※写真の色は照明・カメラ・肌の色によって変わります。</span>"
         )
 
     result_card(
@@ -1611,7 +1611,7 @@ elif st.session_state.step == 3:
 
     result_card(
         "6. 足の形から見る性格傾向",
-        personality + "<br><br><span class='small-note'>※性格を科学的に判断するものではありません。エンタメとしてお楽しみください。</span>",
+        personality,
         "card-lavender",
         "compact-card"
     )
