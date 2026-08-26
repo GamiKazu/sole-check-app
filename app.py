@@ -96,7 +96,7 @@ footer { visibility: hidden; }
 .question-space { height: 6px; }
 .question-space.tight { height: 2px; }
 .fatigue-question-label {
-    font-size: 14px;
+    font-size: 1rem;
     color: #262730;
     margin-top: 2px;
     margin-bottom: 0.3rem;
@@ -479,7 +479,7 @@ div.stButton > button {
     .question-space { height: 4px; }
     .question-space.tight { height: 0px; }
     .fatigue-question-label {
-        font-size: 14px;
+        font-size: 0.98rem;
         margin-bottom: 0.2rem;
     }
     .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
@@ -1855,7 +1855,7 @@ elif st.session_state.step == 3:
         "足の元気": clamp(foot_energy, 35, 100),
         "歩きやすさ": clamp(walkability, 35, 100),
         "足裏状態": clamp(sole_condition, 35, 100),
-        "休息状態": clamp(rest_state, 35, 100),
+        "休息バランス": clamp(rest_state, 35, 100),
     }
 
     score = round(
@@ -1864,7 +1864,7 @@ elif st.session_state.step == 3:
         + radar_values["足の元気"] * 0.20
         + radar_values["歩きやすさ"] * 0.15
         + radar_values["足裏状態"] * 0.20
-        + radar_values["休息状態"] * 0.15
+        + radar_values["休息バランス"] * 0.15
     )
     score = clamp(score)
 
@@ -1887,23 +1887,9 @@ elif st.session_state.step == 3:
     st.markdown(
         f"""
 <div class="step-box">
-<div class="score-result-row">
-  <div class="score-result-main">
-    <div class="score-result-title">
-      総合コンディション：{score}点
-      <span class="score-grade-badge">評価 {score_grade}</span>
-    </div>
+    <div class="score-result-title">診断結果：{score}点</div>
     <div class="score-message">{score_message}</div>
-  </div>
-  <div class="score-grade-guide">
-    <div class="score-grade-guide-title">評価基準</div>
-    90〜100：A<br>
-    75〜89：B<br>
-    55〜74：C<br>
-    40〜54：D<br>
-    0〜39：E
-  </div>
-</div>
+    <div class="small-note" style="margin-top:10px;">※質問と写真から算出した参考スコアです。</div>
 </div>
 """,
         unsafe_allow_html=True,
@@ -1918,30 +1904,19 @@ elif st.session_state.step == 3:
     # 1. 足の形
     # -----------------------------------------------------
     if shape == "エジプト型":
-        shape_text = (
-            "親指が一番長く、小指に向かって少しずつ短くなるタイプです。"
-        )
+        shape_text = "親指が一番長く、小指に向かって少しずつ短くなるタイプです。"
         foot_image = ASSET_DIR / "foot_egypt.png"
         shoe_image = ASSET_DIR / "shoes_egypt.png"
-
     elif shape == "ギリシャ型":
-        shape_text = (
-            "人差し指が親指よりはっきり長いタイプです。"
-        )
+        shape_text = "人差し指が親指よりはっきり長いタイプです。"
         foot_image = ASSET_DIR / "foot_greek.png"
         shoe_image = ASSET_DIR / "shoes_greek.png"
-
     elif shape == "スクエア型":
-        shape_text = (
-            "親指・人差し指・中指の長さがかなり近いタイプです。"
-        )
+        shape_text = "親指・人差し指・中指の長さがかなり近いタイプです。"
         foot_image = ASSET_DIR / "foot_square.png"
         shoe_image = ASSET_DIR / "shoes_square.png"
-
     else:
-        shape_text = (
-            "今回の写真では足の形をはっきり判定できませんでした。"
-        )
+        shape_text = "今回の写真では足の形をはっきり判定できませんでした。"
         foot_image = None
         shoe_image = None
 
@@ -1956,84 +1931,117 @@ elif st.session_state.step == 3:
     )
 
     # -----------------------------------------------------
-    # 2. 足裏の色
+    # 2. 足の色
     # -----------------------------------------------------
-    color_text = COLOR_TEXT.get(
-        foot_color,
-        COLOR_TEXT["判定困難"],
-    )
+    original_color_text = {
+        "白っぽい": (
+            "写真では少し白っぽく見えます。冷えや疲れが続いている時に見られることがあります。"
+            "照明やカメラでも色は変わるため、参考として見てください。"
+        ),
+        "ピンク寄り": (
+            "写真では比較的やわらかなピンク色に見えます。"
+            "照明やカメラでも色は変わるため、参考として見てください。"
+        ),
+        "赤み強め": (
+            "写真では赤みが強めに見えます。活動量が多かった時や、足に熱がこもった時に見られることがあります。"
+            "照明やカメラでも色は変わるため、参考として見てください。"
+        ),
+        "オレンジ寄り": (
+            "写真では少しオレンジ寄りに見えます。"
+            "照明やカメラでも色は変わるため、参考として見てください。"
+        ),
+        "黄み強め": (
+            "写真では少し黄みが強く見えます。"
+            "照明やカメラでも色は変わるため、参考として見てください。"
+        ),
+        "紫っぽい": (
+            "写真では少し紫っぽく見えます。冷えやめぐりが落ちている時に見られることがあります。"
+            "照明やカメラでも色は変わるため、参考として見てください。"
+        ),
+        "標準的な色味": (
+            "写真では標準的な色味に見えます。"
+            "照明やカメラでも色は変わるため、参考として見てください。"
+        ),
+        "判定困難": (
+            "今回の写真では色味を安定して判定できませんでした。"
+            "照明やカメラでも色は変わるため、参考として見てください。"
+        ),
+    }
 
     result_card(
-        "2. 足裏の色",
+        "2. 足の色",
         f"""
 <div class="result-main">{foot_color}</div>
 <br>
-{color_text}
-<br><br>
-<span class="small-note">
-※足裏の色は照明・カメラ・肌色・撮影環境によって変わります。医療的な診断ではなく、写真上の色傾向としてご覧ください。
-</span>
+{original_color_text.get(foot_color, original_color_text["判定困難"])}
 """,
         "card-orange",
     )
 
     # -----------------------------------------------------
-    # 3. 乾燥状態
+    # 3. 今の心と体の傾向
     # -----------------------------------------------------
-    if dryness == "乾燥が目立つ":
-        dryness_text = (
-            "表面の細かな凹凸がやや強く出ています。"
-            "<br><br>入浴後などにクリームで保湿し、特にかかとや足裏の硬くなりやすい部分をやさしくケアしてみてください。"
-        )
-    elif dryness == "やや乾燥":
-        dryness_text = (
-            "少し乾燥傾向が見られます。"
-            "<br><br>お風呂上がりに軽く保湿する習慣をつけると、足裏をやわらかく保ちやすくなります。"
-        )
-    elif dryness == "乾燥は目立たない":
-        dryness_text = (
-            "今回の写真では強い乾燥は目立ちませんでした。"
-            "<br><br>今の状態を保てるよう、必要に応じて保湿を続けてみてください。"
+    body_tendency_parts = []
+
+    if tired == "はい" or standing == "はい":
+        body_tendency_parts.append(
+            "少し疲れがたまっている可能性があります。短い休憩や気分転換を取り入れるのがおすすめです。"
         )
     else:
-        dryness_text = (
-            "今回の写真では乾燥状態を安定して判定できませんでした。"
+        body_tendency_parts.append(
+            "今は大きな疲れは出ていないようです。今のペースを保ちながら、こまめな休息も意識してみましょう。"
+        )
+
+    if cold == "はい":
+        body_tendency_parts.append(
+            "冷えが気になる時は、足元を温めたり軽く動かしたりしてみましょう。"
+        )
+
+    if swelling == "はい":
+        body_tendency_parts.append(
+            "むくみが気になる時は、足首を回したり、ふくらはぎを軽く動かすのがおすすめです。"
         )
 
     result_card(
-        "3. 足裏の乾燥",
-        f"""
-<div class="result-main">{dryness}</div>
-<br>
-{dryness_text}
-""",
+        "3. 今の心と体の傾向",
+        "<br><br>".join(body_tendency_parts),
         "card-green",
     )
 
     # -----------------------------------------------------
-    # 4. 硬くなりやすい部分
+    # 4. 歩き方の傾向
     # -----------------------------------------------------
-    if hard_part == "なし":
-        hard_text = (
-            "今回の写真では、特に強く硬くなっている部分は目立ちませんでした。"
-        )
-    elif hard_part == "判定困難":
-        hard_text = (
-            "今回の写真では、硬くなっている場所を安定して判定できませんでした。"
+    walk_parts = []
+
+    if stumble == "はい":
+        walk_parts.append(
+            "つまずきやすい場合は、歩く時に足先を少し上げることも意識してみましょう。"
         )
     else:
-        hard_text = (
-            f"{hard_part}付近に、やや硬く見える部分があります。"
-            "<br><br>靴の当たり方や体重のかかり方でも変わるため、痛みが出ない範囲で保湿とやさしいケアを意識してみてください。"
+        walk_parts.append(
+            "今回の回答では、つまずきやすさは強く出ていません。今の歩き方を基本に、足元への負担が偏らないよう意識してみましょう。"
+        )
+
+    if sole_wear == "かかとの外側":
+        walk_parts.append(
+            "かかとの外側が減りやすい場合は、外側に体重がかかりやすい傾向が考えられます。"
+        )
+    elif sole_wear == "かかとの内側":
+        walk_parts.append(
+            "かかとの内側が減りやすい場合は、内側に体重がかかりやすい傾向が考えられます。"
+        )
+    elif sole_wear == "つま先側":
+        walk_parts.append(
+            "つま先側が減りやすい場合は、前側に負担がかかりやすい可能性があります。"
+        )
+    elif sole_wear == "左右で差がある":
+        walk_parts.append(
+            "左右で靴底の減り方に差がある場合は、立ち方や歩き方に左右差が出ている可能性があります。"
         )
 
     result_card(
-        "4. 硬くなりやすい部分",
-        f"""
-<div class="result-main">{hard_part}</div>
-<br>
-{hard_text}
-""",
+        "4. 歩き方の傾向",
+        "<br><br>".join(walk_parts),
         "card-sage",
     )
 
@@ -2041,9 +2049,9 @@ elif st.session_state.step == 3:
     # 5. おすすめの靴
     # -----------------------------------------------------
     if shape == "エジプト型":
-        shoe_title = "つま先に丸みと余裕がある靴"
+        shoe_title = "親指側に余裕のある靴"
         shoe_text = (
-            "親指側が当たりにくく、つま先全体に適度な余裕がある形がおすすめです。"
+            "親指が当たりにくく、つま先全体に適度な余裕がある靴がおすすめです。"
         )
     elif shape == "ギリシャ型":
         shoe_title = "人差し指の先に余裕がある靴"
@@ -2051,9 +2059,9 @@ elif st.session_state.step == 3:
             "人差し指が前に当たりにくいよう、つま先に十分な長さがある靴がおすすめです。"
         )
     elif shape == "スクエア型":
-        shoe_title = "横幅にゆとりのある靴"
+        shoe_title = "つま先が広めの靴"
         shoe_text = (
-            "つま先が細すぎない、スクエア寄り・ワイド寄りの靴がおすすめです。"
+            "親指・人差し指・中指の長さが近い足型です。指先が窮屈になりにくい、つま先が広めの靴がおすすめです。"
         )
     else:
         shoe_title = "つま先に無理のない靴"
@@ -2062,22 +2070,7 @@ elif st.session_state.step == 3:
         )
 
     if tired == "はい":
-        shoe_text += (
-            "<br><br>足が疲れやすい場合は、靴底のクッション性やインソールの相性も確認してみましょう。"
-        )
-
-    if sole_wear == "かかとの外側":
-        shoe_text += (
-            "<br><br>かかとの外側が減りやすい場合は、靴底が片減りしていないかもチェックしてみてください。"
-        )
-    elif sole_wear == "かかとの内側":
-        shoe_text += (
-            "<br><br>かかとの内側が減りやすい場合は、土踏まずまわりのフィット感も確認してみてください。"
-        )
-    elif sole_wear == "左右で差がある":
-        shoe_text += (
-            "<br><br>左右差が大きい場合は、左右それぞれのフィット感を確認するのがおすすめです。"
-        )
+        shoe_text += "<br><br>足が疲れやすい場合は、靴底のやわらかさも確認してみましょう。"
 
     result_card_with_image(
         "5. おすすめの靴",
@@ -2090,14 +2083,9 @@ elif st.session_state.step == 3:
     )
 
     # -----------------------------------------------------
-    # 6. 性格傾向
-    # 足型3 × 回答傾向3 = 9タイプ
+    # 6. 足の形から見る性格傾向
     # -----------------------------------------------------
-    personality_scores = {
-        "活動的": 0,
-        "穏やか": 0,
-        "慎重": 0,
-    }
+    personality_scores = {"活動的": 0, "穏やか": 0, "慎重": 0}
 
     if tired == "はい":
         personality_scores["慎重"] += 2
@@ -2126,13 +2114,8 @@ elif st.session_state.step == 3:
 
     if aroma_goal in ["リフレッシュ", "集中", "気分転換"]:
         personality_scores["活動的"] += 2
-    elif aroma_goal in ["リラックス", "睡眠"]:
-        personality_scores["穏やか"] += 2
-
-    if cold == "はい" or swelling == "はい":
-        personality_scores["慎重"] += 1
     else:
-        personality_scores["穏やか"] += 1
+        personality_scores["穏やか"] += 2
 
     personality_axis = max(
         ["穏やか", "活動的", "慎重"],
@@ -2146,16 +2129,17 @@ elif st.session_state.step == 3:
         shape if shape in ["エジプト型", "ギリシャ型", "スクエア型"]
         else "スクエア型"
     )
-
     personality_title, personality_text = PERSONALITY_MAP[
         (personality_shape, personality_axis)
     ]
 
     result_card(
-        "6. 足型から見る性格傾向",
+        "6. 足の形から見る性格傾向",
         f"""
 <div class="personality-title">{personality_title}</div>
 {personality_text}
+<br><br>
+<span class="small-note">※性格を科学的に判断するものではありません。エンタメとしてお楽しみください。</span>
 """,
         "card-lavender",
         "compact-card",
@@ -2181,9 +2165,8 @@ elif st.session_state.step == 3:
         )
     else:
         reflex_text = (
-            "今回は疲れている場所が選択されていません。"
-            "<br><br>セルフケアをする場合は、足裏全体を30秒〜1分程度、"
-            "気持ちいいと感じる強さでゆっくりほぐしてみましょう。"
+            "今回は特に疲れている場所が選択されていません。"
+            "<br><br>足裏全体を気持ちいい程度の強さでゆっくりほぐしてみましょう。"
         )
 
     result_card(
@@ -2193,56 +2176,95 @@ elif st.session_state.step == 3:
     )
 
     # -----------------------------------------------------
-    # 8. アロマ
+    # 8. おすすめアロマ
     # -----------------------------------------------------
-    aroma_name, aroma_feature, aroma_when, aroma_file = AROMA_MAP[
-        aroma_goal
-    ]
+    aroma_name, aroma_feature, aroma_when, aroma_file = AROMA_MAP[aroma_goal]
     aroma_image = ASSET_DIR / aroma_file
 
-    aroma_text = (
-        f"<span class='care-title'>香りの特徴</span><br>"
-        f"{aroma_feature}"
-        f"<br><br><span class='care-title'>こんな時に</span><br>"
-        f"{aroma_when}"
-    )
+    # Original screen used a shorter explanation.
+    aroma_short = {
+        "リラックス": "ゆっくり過ごしたい時や、落ち着きたい時に取り入れやすい香りです。",
+        "リフレッシュ": "気分を切り替えたい時や、すっきりしたい時に取り入れやすい香りです。",
+        "集中": "勉強や仕事など、集中したい時に取り入れやすい香りです。",
+        "睡眠": "夜に気持ちを落ち着けたい時や、休む準備をしたい時に取り入れやすい香りです。",
+        "気分転換": "気持ちを切り替えたい時や、前向きな気分になりたい時に取り入れやすい香りです。",
+    }
 
     result_card_with_image(
         "8. おすすめアロマ",
         aroma_name,
-        aroma_text,
+        aroma_short.get(aroma_goal, aroma_when),
         "card-aroma",
         image_path=aroma_image,
         image_alt=f"{aroma_name}の参考イラスト",
         image_class="aroma-image",
     )
 
+    # -----------------------------------------------------
+    # 9. セルフケア
+    # -----------------------------------------------------
+    care_blocks = []
+
+    if swelling == "はい" or foot_concern == "むくみ":
+        care_blocks.append(
+            "<span class='care-title'>むくみが気になる時</span><br>"
+            "足首をゆっくり回したり、ふくらはぎを軽く動かしてみましょう。"
+        )
+
+    if cold == "はい" or foot_concern == "冷え":
+        care_blocks.append(
+            "<span class='care-title'>冷えが気になる時</span><br>"
+            "足湯や靴下などで、足元を心地よく温めるのがおすすめです。"
+        )
+
+    if tired == "はい" or foot_concern == "疲れやすい":
+        care_blocks.append(
+            "<span class='care-title'>足が疲れている時</span><br>"
+            "足を休ませる時間をつくり、軽いストレッチをしてみましょう。"
+        )
+
+    if stumble == "はい":
+        care_blocks.append(
+            "<span class='care-title'>つまずきやすい時</span><br>"
+            "足首を軽く動かし、歩く時に足先を少し上げることを意識してみましょう。"
+        )
+
+    if dryness in ["やや乾燥", "乾燥が目立つ"] or foot_concern == "乾燥":
+        care_blocks.append(
+            "<span class='care-title'>乾燥が気になる時</span><br>"
+            "入浴後などに足裏をやさしく保湿してみましょう。"
+        )
+
+    if not care_blocks:
+        care_blocks.append(
+            "<span class='care-title'>今の状態を保つために</span><br>"
+            "足首を軽く動かしたり、足裏をやさしくほぐしたりしてみましょう。"
+        )
+
+    result_card(
+        "9. セルフケア",
+        "<br><br>".join(care_blocks),
+        "card-green",
+    )
+
     st.markdown(
         """
 <div class="disclaimer">
-※本コンテンツは足裏写真と質問回答をもとにしたセルフケア・エンタメ向けの参考情報です。医療行為・診断・治療を目的としたものではありません。
+このサービスは医療行為や医学的な診断を行うものではありません。写真の色は照明やカメラによって変わることがあります。足裏ポイントや性格傾向には、リフレクソロジーやエンタメとしての考え方が含まれます。診断点数とレーダーチャートは質問と写真から算出した参考値です。強い痛み、しびれ、傷、急な腫れ、大きな色の変化などがある場合は、必要に応じて医療機関へご相談ください。
 </div>
 """,
         unsafe_allow_html=True,
     )
 
-    with st.container(key="action_buttons"):
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if st.button(
-                "質問に戻る",
-                use_container_width=True,
-            ):
-                st.session_state.step = 1
-                request_scroll_to_top()
-                st.rerun()
-
-        with col2:
-            if st.button(
-                "写真を撮り直す",
-                use_container_width=True,
-            ):
-                st.session_state.step = 2
-                request_scroll_to_top()
-                st.rerun()
+    if st.button(
+        "最初から診断する",
+        use_container_width=True,
+    ):
+        keep_keys = {"step", "scroll_to_top", "analysis"}
+        for key in list(st.session_state.keys()):
+            if key not in keep_keys:
+                del st.session_state[key]
+        st.session_state.analysis = None
+        st.session_state.step = 1
+        request_scroll_to_top()
+        st.rerun()
