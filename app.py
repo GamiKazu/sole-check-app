@@ -495,9 +495,9 @@ div.stButton > button {
     }
 
 .header-banner-wrap {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
+    width: calc(100% + 1.6rem);
+    margin-left: -0.8rem;
+    margin-right: -0.8rem;
     margin-top: 0.1rem;
     margin-bottom: 0;
 }
