@@ -476,8 +476,8 @@ div.stButton > button {
 @media (max-width: 600px) {
     .block-container {
         padding-top: 0 !important;
-        padding-left: 1rem;
-        padding-right: 1rem;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 
     .top-credit {
@@ -495,10 +495,10 @@ div.stButton > button {
     }
 
 .header-banner-wrap {
-    width: calc(100% + 1.6rem);
-    margin-left: -0.8rem;
-    margin-right: -0.8rem;
-    margin-top: 0.1rem;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
     margin-bottom: 0;
 }
 
