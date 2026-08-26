@@ -96,7 +96,7 @@ footer { visibility: hidden; }
 .question-space { height: 6px; }
 .question-space.tight { height: 2px; }
 .fatigue-question-label {
-    font-size: 1rem;
+    font-size: 14px;
     color: #262730;
     margin-top: 2px;
     margin-bottom: 0.3rem;
@@ -109,17 +109,22 @@ footer { visibility: hidden; }
     padding-top: 0.05rem;
     padding-bottom: 0.05rem;
 }
-.st-key-fatigue_checkbox_group > div > [data-testid="stVerticalBlock"] {
+.st-key-fatigue_checkbox_group [data-testid="stHorizontalBlock"] {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-    column-gap: 1rem !important;
-    row-gap: 0.05rem !important;
+    gap: 0.75rem !important;
     width: 100% !important;
 }
 
-.st-key-fatigue_checkbox_group > div > [data-testid="stVerticalBlock"] > div {
-    min-width: 0 !important;
+.st-key-fatigue_checkbox_group [data-testid="column"] {
     width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: none !important;
+}
+
+.st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
+    margin-bottom: -8px !important;
 }
 
 .guide-card {
@@ -474,17 +479,28 @@ div.stButton > button {
     .question-space { height: 4px; }
     .question-space.tight { height: 0px; }
     .fatigue-question-label {
-        font-size: 0.98rem;
+        font-size: 14px;
         margin-bottom: 0.2rem;
     }
     .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
         margin-bottom: -12px;
     }
-    .st-key-fatigue_checkbox_group > div > [data-testid="stVerticalBlock"] {
+    .st-key-fatigue_checkbox_group [data-testid="stHorizontalBlock"] {
+        display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-        column-gap: 0.7rem !important;
-        row-gap: 0 !important;
+        gap: 0.55rem !important;
         width: 100% !important;
+    }
+
+    .st-key-fatigue_checkbox_group [data-testid="column"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        flex: none !important;
+    }
+
+    .st-key-fatigue_checkbox_group [data-testid="stCheckbox"] {
+        margin-bottom: -10px !important;
     }
 
     .guide-card {
@@ -1524,14 +1540,29 @@ if st.session_state.step == 1:
     )
 
     with st.container(key="fatigue_checkbox_group"):
-        q7_head_eye = st.checkbox("頭・目", key="q7_head_eye")
-        q7_neck = st.checkbox("首", key="q7_neck")
-        q7_shoulder = st.checkbox("肩", key="q7_shoulder")
-        q7_back = st.checkbox("背中", key="q7_back")
-        q7_waist = st.checkbox("腰", key="q7_waist")
-        q7_stomach = st.checkbox("胃まわり", key="q7_stomach")
-        q7_leg = st.checkbox("脚", key="q7_leg")
-        q7_whole = st.checkbox("全身", key="q7_whole")
+        c1, c2 = st.columns(2, gap="small")
+        with c1:
+            q7_head_eye = st.checkbox("頭・目", key="q7_head_eye")
+        with c2:
+            q7_neck = st.checkbox("首", key="q7_neck")
+
+        c3, c4 = st.columns(2, gap="small")
+        with c3:
+            q7_shoulder = st.checkbox("肩", key="q7_shoulder")
+        with c4:
+            q7_back = st.checkbox("背中", key="q7_back")
+
+        c5, c6 = st.columns(2, gap="small")
+        with c5:
+            q7_waist = st.checkbox("腰", key="q7_waist")
+        with c6:
+            q7_stomach = st.checkbox("胃まわり", key="q7_stomach")
+
+        c7, c8 = st.columns(2, gap="small")
+        with c7:
+            q7_leg = st.checkbox("脚", key="q7_leg")
+        with c8:
+            q7_whole = st.checkbox("全身", key="q7_whole")
 
     fatigue_area = []
     if q7_head_eye:
