@@ -87,7 +87,7 @@ footer { visibility: hidden; }
     margin-left: -32px;
     margin-right: -32px;
     margin-top: 0.15rem;
-    margin-bottom: 1.8rem;
+margin-bottom: 0;
 }
 
 .header-banner {
@@ -495,11 +495,11 @@ div.stButton > button {
     }
 
 .header-banner-wrap {
-    width: calc(100% + 2rem);
-    margin-left: -1rem;
-    margin-right: -1rem;
+    width: calc(100% + 1.6rem);
+    margin-left: -0.8rem;
+    margin-right: -0.8rem;
     margin-top: 0.1rem;
-    margin-bottom: 1.35rem;
+    margin-bottom: 0;
 }
 
     .question-space { height: 4px; }
