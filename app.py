@@ -1825,7 +1825,21 @@ elif st.session_state.step == 2:
 """,
         unsafe_allow_html=True,
     )
+    st.markdown(
+        """
+<div class="guide-card">
+<b>両足の撮り方</b><br>
+床に座って両ひざを軽く曲げ、両足をそろえて足裏を正面に向けます。<br>
+スマホを足元の前に立てかけ、つま先からかかとまで両足の足裏全体が入るように撮影してください。
+<br><br>
 
+<b>片足の撮り方</b><br>
+片足を伸ばして座り、撮影する足を反対側の太ももの上に軽くのせます。<br>
+足裏をカメラに向け、つま先からかかとまで足裏全体が入るようにスマホを横向きで撮影してください。
+</div>
+""",
+        unsafe_allow_html=True,
+    )
     both_feet = st.file_uploader(
         "両足の写真",
         type=["jpg", "jpeg", "png"],
