@@ -1833,6 +1833,8 @@ elif st.session_state.step == 2:
     st.markdown(
         """
 <div class="guide-card photo-guide-card">
+<b>撮影方法</b><br><br>
+
 <b>両足の撮り方</b><br>
 スマホを壁に立てかけ、両足全体が入るように撮影してください。
 <br><br>
