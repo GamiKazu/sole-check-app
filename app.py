@@ -1830,7 +1830,7 @@ elif st.session_state.step == 2:
 """,
         unsafe_allow_html=True,
     )
- st.markdown(
+    st.markdown(
         """
 <div class="guide-card photo-guide-card">
 <b>両足の撮り方</b><br>
