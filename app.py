@@ -182,6 +182,11 @@ margin-bottom: 0;
     font-size: 0.90rem;
     line-height: 1.45;
 }
+.photo-guide-card {
+    background: #EEF5F8;
+    border: 1px solid #D7E5EA;
+    color: #40545A;
+}
 
 .guide-list {
     margin-top: 10px;
@@ -1825,27 +1830,17 @@ elif st.session_state.step == 2:
 """,
         unsafe_allow_html=True,
     )
-    st.markdown(
+ st.markdown(
         """
-<div class="guide-card">
-<b>両足の撮り方</b><br><br>
-床に座り、両ひざを軽く曲げます。<br>
-両足をそろえて、足裏を正面に向けます。<br><br>
-スマホを足元の前に立てかけ、<br>
-両足の足裏全体が入るように撮影してください。
-</div>
-""",
-        unsafe_allow_html=True,
-    )
+<div class="guide-card photo-guide-card">
+<b>両足の撮り方</b><br>
+床に座り、両ひざを軽く曲げます。両足をそろえて、足裏を正面に向けます。<br>
+スマホを足元の前に立てかけ、両足の足裏全体が入るように撮影してください。
+<br><br>
 
-    st.markdown(
-        """
-<div class="guide-card">
-<b>片足の撮り方</b><br><br>
-片足を伸ばして座り、<br>
-撮影する足を反対側の太ももにのせます。<br><br>
-足裏をカメラに向け、<br>
-足裏全体が入るように横向きで撮影してください。
+<b>片足の撮り方</b><br>
+片足を伸ばして座り、撮影する足を反対側の太ももにのせます。<br>
+足裏をカメラに向け、足裏全体が入るように横向きで撮影してください。
 </div>
 """,
         unsafe_allow_html=True,
