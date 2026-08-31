@@ -1,12 +1,15 @@
 import base64
 import gc
+import io
 import math
+import uuid
 from pathlib import Path
 
 import cv2
 import numpy as np
 import streamlit as st
 from PIL import Image, ImageOps
+from supabase import create_client
 
 
 # =========================================================
@@ -18,6 +21,18 @@ st.set_page_config(
 )
 
 ASSET_DIR = Path("assets")
+
+
+# =========================================================
+# Supabase
+# =========================================================
+@st.cache_resource
+def get_supabase():
+    return create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_SECRET_KEY"],
+    )
+
 
 if "step" not in st.session_state:
     st.session_state.step = 1
@@ -731,7 +746,109 @@ def show_upload_status(uploaded_file):
 """,
         unsafe_allow_html=True,
     )
+# =========================================================
+# Supabase保存
+# =========================================================
+def upload_image_to_supabase(uploaded_file, diagnosis_id, label):
+    if uploaded_file is None:
+        return None
 
+    uploaded_file.seek(0)
+
+    # 撮影画像を読み込み
+    # EXIF情報を落とし、保存容量も抑える
+    with Image.open(uploaded_file) as image:
+        image = ImageOps.exif_transpose(image).convert("RGB")
+
+        # AI学習用として十分なサイズを残しつつ圧縮
+        image.thumbnail(
+            (1600, 1600),
+            Image.Resampling.LANCZOS,
+        )
+
+        buffer = io.BytesIO()
+
+        image.save(
+            buffer,
+            format="JPEG",
+            quality=90,
+            optimize=True,
+        )
+
+    image_bytes = buffer.getvalue()
+
+    storage_path = (
+        f"{diagnosis_id}/{label}.jpg"
+    )
+
+    get_supabase().storage.from_(
+        "foot-images"
+    ).upload(
+        path=storage_path,
+        file=image_bytes,
+        file_options={
+            "content-type": "image/jpeg",
+            "upsert": "false",
+        },
+    )
+
+    return storage_path
+
+
+def save_diagnosis_record(
+    diagnosis_id,
+    both_path,
+    right_path,
+    left_path,
+    analysis,
+    score,
+    score_grade,
+):
+    data = {
+        "id": diagnosis_id,
+
+        "q1_cold": st.session_state.get("cold"),
+        "q2_swelling": st.session_state.get("swelling"),
+        "q3_tired": st.session_state.get("tired"),
+        "q4_standing": st.session_state.get("standing"),
+        "q5_shoes": st.session_state.get("shoes"),
+        "q6_concern": st.session_state.get("foot_concern"),
+
+        "q7_fatigue_area": st.session_state.get(
+            "fatigue_area",
+            [],
+        ),
+
+        "q8_sole_wear": st.session_state.get("sole_wear"),
+        "q9_stumble": st.session_state.get("stumble"),
+        "q10_aroma_goal": st.session_state.get("aroma_goal"),
+
+        "both_image_path": both_path,
+        "right_image_path": right_path,
+        "left_image_path": left_path,
+
+        "predicted_shape": analysis.get(
+            "overall_shape"
+        ),
+        "predicted_color": analysis.get(
+            "foot_color"
+        ),
+        "predicted_dryness": analysis.get(
+            "dryness"
+        ),
+        "predicted_hard_part": analysis.get(
+            "hard_part"
+        ),
+
+        "score": score,
+        "grade": score_grade,
+    }
+
+    get_supabase().table(
+        "diagnosis_records"
+    ).insert(
+        data
+    ).execute()
 
 def file_to_data_uri(path):
     path = Path(path)
@@ -1938,7 +2055,58 @@ elif st.session_state.step == 3:
     else:
         score_grade = "E"
         score_message = "無理をせず、しっかり休むことを意識しましょう"
+# -----------------------------------------------------
+    # Supabaseへ自動保存
+    # -----------------------------------------------------
+    if not st.session_state.get(
+        "saved_to_db",
+        False,
+    ):
+        try:
+            diagnosis_id = str(uuid.uuid4())
 
+            # ---------------------------------------------
+            # 画像保存
+            # ---------------------------------------------
+            both_path = upload_image_to_supabase(
+                st.session_state.get("both_feet"),
+                diagnosis_id,
+                "both",
+            )
+
+            right_path = upload_image_to_supabase(
+                st.session_state.get("right_foot"),
+                diagnosis_id,
+                "right",
+            )
+
+            left_path = upload_image_to_supabase(
+                st.session_state.get("left_foot"),
+                diagnosis_id,
+                "left",
+            )
+
+            # ---------------------------------------------
+            # 回答＋診断結果を保存
+            # ---------------------------------------------
+            save_diagnosis_record(
+                diagnosis_id=diagnosis_id,
+                both_path=both_path,
+                right_path=right_path,
+                left_path=left_path,
+                analysis=analysis,
+                score=score,
+                score_grade=score_grade,
+            )
+
+            # Streamlitの再実行で
+            # 同じ診断が二重保存されないようにする
+            st.session_state.saved_to_db = True
+
+        except Exception as save_error:
+            st.session_state.data_save_error = str(
+                save_error
+            )
     st.markdown(
         f"""
 <div class="step-box">
