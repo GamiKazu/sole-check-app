@@ -1833,7 +1833,7 @@ elif st.session_state.step == 2:
     st.markdown(
         """
 <div class="guide-card photo-guide-card">
-<div style="font-size:1rem; font-weight:700; margin-bottom:8px;">
+<div style="font-size:1rem; font-weight:700; margin-bottom:10px;">
 撮影方法
 </div>
 
