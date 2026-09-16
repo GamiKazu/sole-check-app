@@ -1836,18 +1836,55 @@ elif st.session_state.step == 2:
 <div style="font-size:1rem; font-weight:700; margin-bottom:10px;">
 撮影方法
 </div>
-
-<b>両足の撮り方</b><br>
-スマホを壁に立てかけ、両足全体が入るように撮影してください。
-<br><br>
-
-<b>片足の撮り方</b><br>
-片足を伸ばして座り、撮影する足を反対側の太ももにのせます。<br>
-足裏をカメラに向け、全体が入るように撮影してください。
 </div>
 """,
         unsafe_allow_html=True,
     )
+
+    st.markdown(
+        """
+<div class="guide-card photo-guide-card">
+<b>両足の撮り方</b><br>
+<span class="guide-note" style="display:block; margin-top:4px;">
+下のどちらか1つの方法で撮影してください。
+</span>
+<br>
+
+<b>スマホを置いて撮る</b><br>
+スマホを壁に立てかけ、両足を前に伸ばします。<br>
+足裏をカメラに向け、両足全体が入るように撮影してください。
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+    with st.expander("撮影イメージを見る（スマホを置いて撮る）"):
+        st.image(str(ASSET_DIR / "photo_guide_both_wall.png"), use_container_width=True)
+
+    st.markdown(
+        """
+<div class="guide-card photo-guide-card">
+<b>スマホを持って撮る</b><br>
+床に座って両ひざを曲げ、両足裏を自分の正面に向けます。<br>
+スマホを手に持ち、両足裏全体が入るように撮影してください。
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+    with st.expander("撮影イメージを見る（スマホを持って撮る）"):
+        st.image(str(ASSET_DIR / "photo_guide_both_hold.png"), use_container_width=True)
+
+    st.markdown(
+        """
+<div class="guide-card photo-guide-card">
+<b>片足の撮り方</b><br>
+床に座って片足を前に伸ばし、撮影する足の足裏をカメラに向けます。<br>
+足は床につけたまま、足裏全体が入るように撮影してください。
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+    with st.expander("撮影イメージを見る（片足）"):
+        st.image(str(ASSET_DIR / "photo_guide_single.png"), use_container_width=True)
     both_feet = st.file_uploader(
         "両足の写真",
         type=["jpg", "jpeg", "png"],
