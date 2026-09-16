@@ -213,8 +213,8 @@ margin-bottom: 0;
 }
 
 .upload-guide-highlight {
-    background: #F4EEE6;
-    border: 1px solid #E4D8CA;
+    background: #F7F1EA;
+    border: 1px solid rgba(196, 174, 150, 0.42);
     border-radius: 12px;
     padding: 11px 12px;
     line-height: 1.5;
@@ -250,14 +250,14 @@ margin-bottom: 0;
 }
 
 .st-key-both_photo_guide_card {
-    background: #DDECEF;
-    border: 1px solid #CADDE1;
+    background: #D8EAEB;
+    border: 1px solid #C3DCDD;
     margin-bottom: 12px;
 }
 
 .st-key-single_photo_guide_card {
-    background: #E4EDF2;
-    border: 1px solid #D2DDE3;
+    background: #E1EAF2;
+    border: 1px solid #CCD8E2;
 }
 
 .photo-guide-card-title {
