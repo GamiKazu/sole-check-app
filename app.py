@@ -188,21 +188,76 @@ margin-bottom: 0;
     color: #40545A;
 }
 
+
+.guide-list {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    line-height: 1.55;
+}
+
+.guide-note {
+    color: #918881;
+    font-size: 0.60rem;
+    line-height: 1.4;
+}
+
+.upload-guide-title {
+    font-weight: 700;
+    color: #4A4946;
+    margin-bottom: 5px;
+}
+
+.upload-guide-text {
+    line-height: 1.55;
+    margin-bottom: 14px;
+}
+
+.upload-guide-highlight {
+    background: #F4EEE6;
+    border: 1px solid #E4D8CA;
+    border-radius: 12px;
+    padding: 11px 12px;
+    line-height: 1.5;
+}
+
+.upload-guide-highlight-title {
+    font-weight: 700;
+    color: #7B6652;
+    margin-bottom: 3px;
+}
+
+.st-key-photo_guide_outer {
+    background: #EAF3F5;
+    border: 1px solid #D5E3E7;
+    border-radius: 18px;
+    padding: 16px;
+    margin-top: 4px;
+    margin-bottom: 18px;
+}
+
 .photo-guide-heading {
-    font-size: 1rem;
+    font-size: 1.02rem;
     font-weight: 700;
     color: #40545A;
-    margin: 6px 0 12px 2px;
+    margin: 0 0 12px 1px;
 }
 
 .st-key-both_photo_guide_card,
 .st-key-single_photo_guide_card {
-    background: #EEF5F8;
-    border: 1px solid #D7E5EA;
-    border-radius: 17px;
-    padding: 16px 16px 14px 16px;
-    margin-bottom: 16px;
+    border-radius: 15px;
+    padding: 15px 15px 13px 15px;
     color: #40545A;
+}
+
+.st-key-both_photo_guide_card {
+    background: #DDECEF;
+    border: 1px solid #CADDE1;
+    margin-bottom: 12px;
+}
+
+.st-key-single_photo_guide_card {
+    background: #E4EDF2;
+    border: 1px solid #D2DDE3;
 }
 
 .photo-guide-card-title {
@@ -213,10 +268,10 @@ margin-bottom: 0;
 }
 
 .photo-guide-choice-note {
-    color: #7D8D92;
-    font-size: 0.72rem;
+    color: #6F8288;
+    font-size: 0.74rem;
     line-height: 1.45;
-    margin-bottom: 15px;
+    margin-bottom: 14px;
 }
 
 .photo-method-title {
@@ -234,34 +289,21 @@ margin-bottom: 0;
 
 .photo-method-divider {
     height: 1px;
-    background: #D7E5EA;
-    margin: 15px 0;
+    background: rgba(82, 111, 120, 0.18);
+    margin: 14px 0;
 }
 
-/* 撮影方法カード内の展開ボタンを子要素としてなじませる */
 .st-key-both_photo_guide_card [data-testid="stExpander"],
 .st-key-single_photo_guide_card [data-testid="stExpander"] {
-    margin-top: 9px;
+    margin-top: 8px;
     margin-bottom: 0;
 }
 
 .st-key-both_photo_guide_card [data-testid="stExpander"] details,
 .st-key-single_photo_guide_card [data-testid="stExpander"] details {
-    background: rgba(255, 255, 255, 0.72);
-    border: 1px solid #D3E0E5;
-    border-radius: 12px;
-}
-
-.guide-list {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    line-height: 1.55;
-}
-
-.guide-note {
-    color: #918881;
-    font-size: 0.60rem;
-    line-height: 1.4;
+    background: rgba(255, 255, 255, 0.34);
+    border: 1px solid rgba(92, 120, 129, 0.18);
+    border-radius: 11px;
 }
 
 .photo-note {
@@ -1887,24 +1929,31 @@ elif st.session_state.step == 2:
     st.markdown(
         """
 <div class="guide-card">
-1枚でも診断できます。下のいずれか1枚以上をアップロードしてください。
-<div class="guide-list">・両足<br>・右足<br>・左足</div>
-<span class="guide-note">※両足・右足・左足の写真がそろうと、より判定しやすくなります。</span>
+<div class="upload-guide-title">1枚でも診断できます。</div>
+<div class="upload-guide-text">
+両足・右足・左足のいずれか1枚以上をアップロードしてください。
+</div>
+
+<div class="upload-guide-highlight">
+<div class="upload-guide-highlight-title">より精度を高めたい場合</div>
+両足・右足・左足の3種類をそろえて撮影するのがおすすめです。
+</div>
 </div>
 """,
         unsafe_allow_html=True,
     )
-    st.markdown(
-        '<div class="photo-guide-heading">撮影方法</div>',
-        unsafe_allow_html=True,
-    )
-
-    with st.container(key="both_photo_guide_card"):
+    with st.container(key="photo_guide_outer"):
         st.markdown(
-            """
+            '<div class="photo-guide-heading">撮影方法</div>',
+            unsafe_allow_html=True,
+        )
+
+        with st.container(key="both_photo_guide_card"):
+            st.markdown(
+                """
 <div class="photo-guide-card-title">両足の撮り方</div>
 <div class="photo-guide-choice-note">
-下のどちらか1つの方法で撮影してください。
+両足を撮影する場合は、下のどちらか1つの方法で撮影してください。
 </div>
 
 <div class="photo-method-title">スマホを置いて撮る</div>
@@ -1913,17 +1962,17 @@ elif st.session_state.step == 2:
 足裏をカメラに向け、両足全体が入るように撮影してください。
 </div>
 """,
-            unsafe_allow_html=True,
-        )
-
-        with st.expander("撮影イメージを見る"):
-            st.image(
-                str(ASSET_DIR / "photo_guide_both_wall.png"),
-                use_container_width=True,
+                unsafe_allow_html=True,
             )
 
-        st.markdown(
-            """
+            with st.expander("撮影イメージを見る"):
+                st.image(
+                    str(ASSET_DIR / "photo_guide_both_wall.png"),
+                    use_container_width=True,
+                )
+
+            st.markdown(
+                """
 <div class="photo-method-divider"></div>
 <div class="photo-method-title">スマホを持って撮る</div>
 <div class="photo-method-text">
@@ -1931,32 +1980,32 @@ elif st.session_state.step == 2:
 スマホを手に持ち、両足裏全体が入るように撮影してください。
 </div>
 """,
-            unsafe_allow_html=True,
-        )
-
-        with st.expander("撮影イメージを見る"):
-            st.image(
-                str(ASSET_DIR / "photo_guide_both_hold.png"),
-                use_container_width=True,
+                unsafe_allow_html=True,
             )
 
-    with st.container(key="single_photo_guide_card"):
-        st.markdown(
-            """
+            with st.expander("撮影イメージを見る"):
+                st.image(
+                    str(ASSET_DIR / "photo_guide_both_hold.png"),
+                    use_container_width=True,
+                )
+
+        with st.container(key="single_photo_guide_card"):
+            st.markdown(
+                """
 <div class="photo-guide-card-title">片足の撮り方</div>
 <div class="photo-method-text">
 床に座って片足を前に伸ばし、撮影する足の足裏をカメラに向けます。<br>
 足は床につけたまま、足裏全体が入るように撮影してください。
 </div>
 """,
-            unsafe_allow_html=True,
-        )
-
-        with st.expander("撮影イメージを見る"):
-            st.image(
-                str(ASSET_DIR / "photo_guide_single.png"),
-                use_container_width=True,
+                unsafe_allow_html=True,
             )
+
+            with st.expander("撮影イメージを見る"):
+                st.image(
+                    str(ASSET_DIR / "photo_guide_single.png"),
+                    use_container_width=True,
+                )
     both_feet = st.file_uploader(
         "両足の写真",
         type=["jpg", "jpeg", "png"],
