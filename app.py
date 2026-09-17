@@ -213,17 +213,22 @@ margin-bottom: 0;
 }
 
 .upload-guide-highlight {
-    background: #F7F1EA;
-    border: 1px solid rgba(196, 174, 150, 0.42);
-    border-radius: 12px;
-    padding: 11px 12px;
-    line-height: 1.5;
+    background: transparent;
+    border: 0;
+    border-left: 4px solid #B89A7A;
+    border-radius: 0;
+    padding: 2px 0 2px 12px;
+    margin-top: 14px;
+    line-height: 1.55;
+    color: #4A4946;
+    font-size: 0.94rem;
 }
 
 .upload-guide-highlight-title {
-    font-weight: 700;
+    font-weight: 800;
     color: #7B6652;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
+    font-size: 0.96rem;
 }
 
 .st-key-photo_guide_outer {
@@ -1936,7 +1941,7 @@ elif st.session_state.step == 2:
 
 <div class="upload-guide-highlight">
 <div class="upload-guide-highlight-title">より精度を高めたい場合</div>
-両足・右足・左足の3種類をそろえて撮影するのがおすすめです。
+<strong>両足・右足・左足の3種類をそろえて撮影するのがおすすめです。</strong>
 </div>
 </div>
 """,
@@ -1951,7 +1956,7 @@ elif st.session_state.step == 2:
         with st.container(key="both_photo_guide_card"):
             st.markdown(
                 """
-<div class="photo-guide-card-title">両足の撮り方</div>
+<div class="photo-guide-card-title">① 両足の撮り方</div>
 <div class="photo-guide-choice-note">
 両足を撮影する場合は、下のどちらか1つの方法で撮影してください。
 </div>
@@ -1992,7 +1997,7 @@ elif st.session_state.step == 2:
         with st.container(key="single_photo_guide_card"):
             st.markdown(
                 """
-<div class="photo-guide-card-title">片足の撮り方</div>
+<div class="photo-guide-card-title">② 片足の撮り方（右足／左足）</div>
 <div class="photo-method-text">
 床に座って片足を前に伸ばし、撮影する足の足裏をカメラに向けます。<br>
 足は床につけたまま、足裏全体が入るように撮影してください。
