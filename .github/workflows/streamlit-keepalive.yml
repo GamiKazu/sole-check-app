@@ -15,7 +15,7 @@ jobs:
       - name: Check Streamlit response
         shell: bash
         run: |
-          URL="https://sole-check-app-xcf3vnsxvuqiqszhaqmyqm.streamlit.app/"
+          URL="https://sole-check-app-xcf3vnsxvuqiqszhaqmyqm.streamlit.app/_stcore/health"
 
           curl --silent --show-error \
             --dump-header response-headers.txt \
