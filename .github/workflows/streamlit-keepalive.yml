@@ -1,3 +1,4 @@
+
 name: Streamlit Keep Alive
 
 on:
@@ -19,7 +20,7 @@ jobs:
           npm install --no-save playwright
           npx playwright install --with-deps chromium
 
-      - name: Open Streamlit app
+      - name: Open Streamlit app and diagnose
         env:
           STREAMLIT_URL: https://sole-check-app-xcf3vnsxvuqiqszhaqmyqm.streamlit.app/
         run: |
@@ -27,34 +28,121 @@ jobs:
           const { chromium } = require('playwright');
 
           (async () => {
-            const browser = await chromium.launch({ headless: true });
+            const browser = await chromium.launch({
+              headless: true
+            });
+
             try {
               const page = await browser.newPage();
-              const response = await page.goto(process.env.STREAMLIT_URL, {
-                waitUntil: 'domcontentloaded',
-                timeout: 90000
-              });
-              console.log('HTTP status:', response?.status());
-              console.log('Browser URL:', page.url());
 
-              if (new URL(page.url()).hostname !== new URL(process.env.STREAMLIT_URL).hostname) {
-                throw new Error('Redirected away from Streamlit app');
+              page.on('console', msg => {
+                console.log(
+                  'Browser console:',
+                  msg.type(),
+                  msg.text()
+                );
+              });
+
+              page.on('pageerror', error => {
+                console.log(
+                  'Browser error:',
+                  error.message
+                );
+              });
+
+              page.on('requestfailed', request => {
+                console.log(
+                  'Failed request:',
+                  request.url(),
+                  request.failure()?.errorText
+                );
+              });
+
+              page.on('response', response => {
+                if (response.status() >= 400) {
+                  console.log(
+                    'HTTP error:',
+                    response.status(),
+                    response.url()
+                  );
+                }
+              });
+
+              const response = await page.goto(
+                process.env.STREAMLIT_URL,
+                {
+                  waitUntil: 'domcontentloaded',
+                  timeout: 90000
+                }
+              );
+
+              console.log(
+                'HTTP status:',
+                response?.status()
+              );
+
+              console.log(
+                'Browser URL:',
+                page.url()
+              );
+
+              try {
+                await page.locator(
+                  '[data-testid="stAppViewContainer"]'
+                ).waitFor({
+                  state: 'visible',
+                  timeout: 90000
+                });
+
+                console.log(
+                  'Streamlit container is visible'
+                );
+
+                await page.getByText(
+                  '足裏タイプ診断'
+                ).first().waitFor({
+                  state: 'visible',
+                  timeout: 30000
+                });
+
+                console.log(
+                  'SUCCESS: Streamlit app is visible'
+                );
+
+                await page.waitForTimeout(10000);
+
+              } catch (error) {
+                console.log(
+                  'APP DISPLAY ERROR:',
+                  error.message
+                );
+
+                console.log(
+                  'Final browser URL:',
+                  page.url()
+                );
+
+                console.log(
+                  'Page title:',
+                  await page.title()
+                );
+
+                const bodyText = await page.locator(
+                  'body'
+                ).innerText().catch(() => '');
+
+                console.log(
+                  'Page body:',
+                  bodyText.slice(0, 2000)
+                );
+
+                throw error;
               }
 
-              await page.locator('[data-testid="stAppViewContainer"]').waitFor({
-                state: 'visible',
-                timeout: 90000
-              });
-              await page.getByText('足裏タイプ診断').first().waitFor({
-                state: 'visible',
-                timeout: 30000
-              });
-
-              console.log('SUCCESS: Streamlit app is visible');
-              await page.waitForTimeout(10000);
             } finally {
               await browser.close();
             }
+
           })().catch(error => {
             console.error(error);
             process.exitCode = 1;
